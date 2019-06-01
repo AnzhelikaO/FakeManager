@@ -59,7 +59,7 @@ namespace FakeManager
 
             #endregion
             TileCollectionType = typeof(TileProvider);
-            ServerApi.Hooks.NetSendData.Register(this, OnSendData);
+            ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
             ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
             ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
         }

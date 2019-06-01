@@ -19,8 +19,8 @@ namespace FakeManager
                 return;
             }
 
-            if ((PlayerIndex == IgnoreIndex)
-                    || (Netplay.Clients[PlayerIndex]?.IsActive != true))
+            RemoteClient client = Netplay.Clients[PlayerIndex];
+            if ((PlayerIndex == IgnoreIndex) || (client?.IsActive != true))
                 return;
 
             using (MemoryStream ms = new MemoryStream())
@@ -34,15 +34,15 @@ namespace FakeManager
                 bw.Write((short)position);
                 bw.BaseStream.Position = position;
                 byte[] data = ms.ToArray();
-                Netplay.Clients[PlayerIndex].Socket.AsyncSend(data, 0, data.Length,
-                    new SocketSendCallback(Netplay.Clients[PlayerIndex].ServerWriteCallBack), null);
+                client.Socket.AsyncSend(data, 0, data.Length,
+                    new SocketSendCallback(client.ServerWriteCallBack), null);
             }
         }
 
         #endregion
         #region WriteTiles
 
-        public static void WriteTiles(BinaryWriter BinaryWriter,
+        private static void WriteTiles(BinaryWriter BinaryWriter,
             int PlayerIndex, int Size, int X, int Y, int Number5 = 0)
         {
             if (Size < 0)

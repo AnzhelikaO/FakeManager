@@ -20,8 +20,8 @@ namespace FakeManager
                 return;
             }
 
-            if ((PlayerIndex == IgnoreIndex)
-                    || (Netplay.Clients[PlayerIndex]?.IsActive != true))
+            RemoteClient client = Netplay.Clients[PlayerIndex];
+            if ((PlayerIndex == IgnoreIndex) || (client?.IsActive != true))
                 return;
 
             using (MemoryStream ms = new MemoryStream())
@@ -37,15 +37,15 @@ namespace FakeManager
                 bw.Write((short)position);
                 bw.BaseStream.Position = position;
                 byte[] data = ms.ToArray();
-                Netplay.Clients[PlayerIndex].Socket.AsyncSend(data, 0, data.Length,
-                    new SocketSendCallback(Netplay.Clients[PlayerIndex].ServerWriteCallBack), null);
+                client.Socket.AsyncSend(data, 0, data.Length,
+                    new SocketSendCallback(client.ServerWriteCallBack), null);
             }
         }
 
         #endregion
         #region CompressTileBlock
 
-        public static int CompressTileBlock(int PlayerIndex,
+        private static int CompressTileBlock(int PlayerIndex,
             int XStart, int YStart, short Width, short Height,
             byte[] Buffer, int BufferStart)
         {
@@ -106,7 +106,7 @@ namespace FakeManager
         #endregion
         #region CompressTileBlock_Inner
 
-        public static void CompressTileBlock_Inner(int PlayerIndex,
+        private static void CompressTileBlock_Inner(int PlayerIndex,
             BinaryWriter BinaryWriter, int XStart, int YStart, int Width, int Height)
         {
             short[] array = new short[1000];
