@@ -76,7 +76,7 @@ namespace FakeManager
             }
             BinaryWriter.Write((short)X);
             BinaryWriter.Write((short)Y);
-            OTAPI.Tile.ITile[,] applied = FakeManager.GetApplied(PlayerIndex, X, Y, Size, Size);
+            OTAPI.Tile.ITile[,] applied = FakeManager.GetAppliedTiles(PlayerIndex, X, Y, Size, Size);
             for (int num8 = X; num8 < X + Size; num8++)
             {
                 for (int num9 = Y; num9 < Y + Size; num9++)

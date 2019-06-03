@@ -1,4 +1,5 @@
 ﻿#region Using
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using Terraria;
@@ -110,10 +111,8 @@ namespace FakeManager
             BinaryWriter BinaryWriter, int XStart, int YStart, int Width, int Height)
         {
             short[] array = new short[1000];
-            short[] array2 = new short[1000];
             short[] array3 = new short[1000];
             short num = 0;
-            short num2 = 0;
             short num3 = 0;
             short num4 = 0;
             int num5 = 0;
@@ -122,8 +121,8 @@ namespace FakeManager
             byte[] array4 = new byte[13];
             OTAPI.Tile.ITile tile = null;
 
-            OTAPI.Tile.ITile[,] tiles = FakeManager.GetApplied(PlayerIndex, XStart, YStart, Width, Height);
-
+            OTAPI.Tile.ITile[,] tiles =
+                FakeManager.GetAppliedTiles(PlayerIndex, XStart, YStart, Width, Height);
             for (int i = YStart; i < YStart + Height; i++)
             {
                 for (int j = XStart; j < XStart + Width; j++)
@@ -186,40 +185,6 @@ namespace FakeManager
                                 {
                                     array[(int)num] = num8;
                                     num += 1;
-                                }
-                            }
-                            if (tile2.type == 85 && tile2.frameX % 36 == 0 && tile2.frameY % 36 == 0)
-                            {
-                                short num9 = (short)Sign.ReadSign(j, i, true);
-                                if (num9 != -1)
-                                {
-                                    short[] array5 = array2;
-                                    short num10 = num2;
-                                    num2 = (short)(num10 + 1);
-                                    array5[(int)num10] = num9;
-                                }
-                            }
-                            ushort type = tile2.type;
-                            if (type == 55 && tile2.frameX % 36 == 0 && tile2.frameY % 36 == 0)
-                            {
-                                short num11 = (short)Sign.ReadSign(j, i, true);
-                                if (num11 != -1)
-                                {
-                                    short[] array6 = array2;
-                                    short num12 = num2;
-                                    num2 = (short)(num12 + 1);
-                                    array6[(int)num12] = num11;
-                                }
-                            }
-                            if (tile2.type == 425 && tile2.frameX % 36 == 0 && tile2.frameY % 36 == 0)
-                            {
-                                short num13 = (short)Sign.ReadSign(j, i, true);
-                                if (num13 != -1)
-                                {
-                                    short[] array7 = array2;
-                                    short num14 = num2;
-                                    num2 = (short)(num14 + 1);
-                                    array7[(int)num14] = num13;
                                 }
                             }
                             if (tile2.type == 378 && tile2.frameX % 36 == 0 && tile2.frameY == 0)
@@ -372,15 +337,19 @@ namespace FakeManager
                 BinaryWriter.Write((short)chest.y);
                 BinaryWriter.Write(chest.name);
             }
-            BinaryWriter.Write(num2);
-            for (int l = 0; l < (int)num2; l++)
+
+            Dictionary<int, Sign> signs =
+                FakeManager.GetAppliedSigns(PlayerIndex, XStart, YStart, Width, Height);
+            BinaryWriter.Write((short)signs.Count);
+            foreach (KeyValuePair<int, Sign> pair in signs)
             {
-                Sign sign = Main.sign[(int)array2[l]];
-                BinaryWriter.Write(array2[l]);
+                Sign sign = pair.Value;
+                BinaryWriter.Write(pair.Key);
                 BinaryWriter.Write((short)sign.x);
                 BinaryWriter.Write((short)sign.y);
                 BinaryWriter.Write(sign.text);
             }
+
             BinaryWriter.Write(num3);
             for (int m = 0; m < (int)num3; m++)
             {

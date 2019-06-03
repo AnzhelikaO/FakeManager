@@ -2,6 +2,8 @@
 using System;
 using Terraria;
 using OTAPI.Tile;
+using System.Collections.Generic;
+using System.Linq;
 #endregion
 namespace FakeManager
 {
@@ -12,14 +14,17 @@ namespace FakeManager
         public TileProvider Tile;
         public int X, Y, Width, Height;
         public bool Enabled = true;
-        public FakeCollection Collection = null;
+        public FakeCollection Collection;
+        private Dictionary<int, Sign> FakeSigns;
+        private Sign SignPlaceholder = new Sign() { x = -1, y = -1 };
 
         public bool IsPersonal => Collection.IsPersonal;
 
         #endregion
         #region Constructor [TileProvider]
 
-        public FakeTileRectangle(FakeCollection Collection, int X, int Y, int Width, int Height, TileProvider Tile = null)
+        public FakeTileRectangle(FakeCollection Collection, int X, int Y,
+            int Width, int Height, TileProvider Tile = null)
         {
             this.Collection = Collection;
             this.Tile = new TileProvider(Width, Height);
@@ -39,12 +44,14 @@ namespace FakeManager
                         if (t != null)
                             this.Tile[i - X, j - Y].CopyFrom(t);
                     }
+            this.FakeSigns = new Dictionary<int, Sign>();
         }
 
         #endregion
         #region Constructor [ITile[,]]
 
-        public FakeTileRectangle(FakeCollection Collection, int X, int Y, int Width, int Height, ITile[,] Tile)
+        public FakeTileRectangle(FakeCollection Collection,
+            int X, int Y, int Width, int Height, ITile[,] Tile)
             : this(Collection, X, Y, Width, Height)
         {
             for (int i = X; i < X + Width; i++)
@@ -91,6 +98,57 @@ namespace FakeManager
 
         #endregion
 
+        #region AddSign
+
+        public void AddSign(Sign Sign)
+        {
+            if (Sign == null)
+                throw new ArgumentNullException(nameof(Sign), "Sign is null.");
+
+            KeyValuePair<int, Sign>[] signs = FakeSigns.Where(s =>
+                ((s.Value.x == Sign.x) && (s.Value.y == Sign.y))).ToArray();
+            if (signs.Length == 0)
+            {
+                int index = -1;
+                for (int i = 999; i >= 0; i--)
+                    if (Main.sign[i] == null)
+                    {
+                        index = i;
+                        break;
+                    }
+                if (index == -1)
+                    throw new Exception("Could not add a sign.");
+                Main.sign[index] = SignPlaceholder;
+                FakeSigns.Add(index, Sign);
+            }
+            else
+                FakeSigns[signs[0].Key] = Sign;
+        }
+
+        #endregion
+        #region RemoveSign
+
+        public bool RemoveSign(Sign Sign)
+        {
+            if (Sign == null)
+                throw new ArgumentNullException(nameof(Sign), "Sign is null.");
+            return RemoveSign(Sign.x, Sign.y);
+        }
+
+        public bool RemoveSign(int X, int Y)
+        {
+            KeyValuePair<int, Sign>[] signs = FakeSigns.Where(s =>
+                ((s.Value.x == X) && (s.Value.y == Y))).ToArray();
+            if (signs.Length != 1)
+                return false;
+            int index = signs[0].Key;
+            Main.sign[index] = null;
+            FakeSigns.Remove(index);
+            return true;
+        }
+
+        #endregion
+
         #region Intersect
 
         public void Intersect(int X, int Y, int Width, int Height,
@@ -121,20 +179,34 @@ namespace FakeManager
 
         #region Apply
 
-        public void Apply(ITile[,] Tiles, int AbsoluteX, int AbsoluteY)
+        public void ApplyTiles(ITile[,] Tiles, int AbsoluteX, int AbsoluteY)
         {
             Intersect(AbsoluteX, AbsoluteY, Tiles.GetLength(0), Tiles.GetLength(1),
-                out int intersectionX, out int intersectionY,
-                out int intersectionWidth, out int intersectionHeight);
-            int intersectionXLimit = (intersectionX + intersectionWidth);
-            int intersectionYLimit = (intersectionY + intersectionHeight);
-            for (int X = intersectionX; X < intersectionXLimit; X++)
-                for (int Y = intersectionY; Y < intersectionYLimit; Y++)
+                out int x1, out int y1, out int w, out int h);
+            int x2 = (x1 + w), y2 = (y1 + h);
+
+            for (int i = x1; i < x2; i++)
+                for (int j = y1; j < y2; j++)
                 {
-                    ITile tile = Tile[X - this.X, Y - this.Y];
+                    ITile tile = Tile[i - X, j - Y];
                     if (tile != null)
-                        Tiles[(X - AbsoluteX), (Y - AbsoluteY)] = tile;
+                        Tiles[(i - AbsoluteX), (j - AbsoluteY)] = tile;
                 }
+        }
+
+        public void ApplySigns(Dictionary<int, Sign> Signs,
+            int AbsoluteX, int AbsoluteY, int Width, int Height)
+        {
+            Intersect(AbsoluteX, AbsoluteY, Width, Height,
+                out int x1, out int y1, out int w, out int h);
+            int x2 = (x1 + w), y2 = (y1 + h);
+
+            foreach (KeyValuePair<int, Sign> pair in FakeSigns)
+            {
+                int x = pair.Value.x, y = pair.Value.y;
+                if ((x >= x1) && (x < x2) && (y >= y1) && (y < y2))
+                    Signs.Add(pair.Key, pair.Value);
+            }
         }
 
         #endregion

@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using Terraria;
-using OTAPI.Tile;
 #endregion
 namespace FakeManager
 {

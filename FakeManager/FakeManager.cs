@@ -1,6 +1,7 @@
 ﻿#region Using
 using OTAPI.Tile;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Terraria;
@@ -113,30 +114,64 @@ namespace FakeManager
 
         #endregion
 
-        #region GetApplied
+        #region GetAppliedTiles
 
-        public static ITile[,] GetApplied(int PlayerIndex, int X, int Y, int Width, int Height)
+        public static ITile[,] GetAppliedTiles(int PlayerIndex, int X, int Y, int Width, int Height)
         {
-            ITile[,] result = new ITile[Width, Height];
-            for (int i = X; i < X + Width; i++)
-                for (int j = Y; j < Y + Height; j++)
-                    result[i - X, j - Y] = Main.tile[i, j];
+            ITile[,] tiles = new ITile[Width, Height];
+            int X2 = (X + Width), Y2 = (Y + Height);
+            for (int i = X; i < X2; i++)
+                for (int j = Y; j < Y2; j++)
+                    tiles[i - X, j - Y] = Main.tile[i, j];
 
             for (int i = 0; i < Common.Order.Count; i++)
             {
                 FakeTileRectangle fake = Common.Data[Common.Order[i]];
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
-                    fake.Apply(result, X, Y);
+                    fake.ApplyTiles(tiles, X, Y);
             }
 
             for (int i = 0; i < Personal[PlayerIndex].Order.Count; i++)
             {
                 FakeTileRectangle fake = Personal[PlayerIndex].Data[Personal[PlayerIndex].Order[i]];
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
-                    fake.Apply(result, X, Y);
+                    fake.ApplyTiles(tiles, X, Y);
             }
 
-            return result;
+            return tiles;
+        }
+
+        #endregion
+        #region GetAppliedSigns
+
+        public static Dictionary<int, Sign> GetAppliedSigns(int PlayerIndex,
+            int X, int Y, int Width, int Height)
+        {
+            Dictionary<int, Sign> signs = new Dictionary<int, Sign>();
+            int X2 = (X + Width), Y2 = (Y + Height);
+            for (int i = 0; i < Main.sign.Length; i++)
+            {
+                Sign sign = Main.sign[i];
+                if ((sign != null) && (sign.x >= X) && (sign.x < X2)
+                        && (sign.y >= Y) && (sign.y < Y2))
+                    signs.Add(i, sign);
+            }
+
+            for (int i = 0; i < Common.Order.Count; i++)
+            {
+                FakeTileRectangle fake = Common.Data[Common.Order[i]];
+                if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
+                    fake.ApplySigns(signs, X, Y, Width, Height);
+            }
+
+            for (int i = 0; i < Personal[PlayerIndex].Order.Count; i++)
+            {
+                FakeTileRectangle fake = Personal[PlayerIndex].Data[Personal[PlayerIndex].Order[i]];
+                if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
+                    fake.ApplySigns(signs, X, Y, Width, Height);
+            }
+
+            return signs;
         }
 
         #endregion
