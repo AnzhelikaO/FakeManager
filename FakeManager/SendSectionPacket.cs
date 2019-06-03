@@ -344,7 +344,7 @@ namespace FakeManager
             foreach (KeyValuePair<int, Sign> pair in signs)
             {
                 Sign sign = pair.Value;
-                BinaryWriter.Write(pair.Key);
+                BinaryWriter.Write((short)pair.Key);
                 BinaryWriter.Write((short)sign.x);
                 BinaryWriter.Write((short)sign.y);
                 BinaryWriter.Write(sign.text);
