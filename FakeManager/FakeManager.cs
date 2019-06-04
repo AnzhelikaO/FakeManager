@@ -17,12 +17,11 @@ namespace FakeManager
         public override string Name => "FakeManager";
         public override Version Version => Assembly.GetExecutingAssembly().GetName().Version;
         public override string Author => "Anzhelika & ASgo";
-        public override string Description => "TODO: does shit";
+        public override string Description => "Plugin for creating zones with fake tiles and signs.";
         public FakeManager(Main game) : base(game) { }
 
         public static FakeCollection Common = new FakeCollection();
         public static FakeCollection[] Personal = new FakeCollection[255];
-        public static Type TileCollectionType;
 
         #endregion
 
@@ -30,9 +29,34 @@ namespace FakeManager
 
         public override void Initialize()
         {
-            #region Update provider
+            ServerApi.Hooks.GamePostInitialize.Register(this, OnGamePostInitialize);
+            ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
+            ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
+            ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
+        }
 
-            TileProvider provider = new TileProvider();
+        #endregion
+        #region Dispose
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                ServerApi.Hooks.GamePostInitialize.Deregister(this, OnGamePostInitialize);
+                ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
+                ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
+                ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
+            }
+            base.Dispose(disposing);
+        }
+
+        #endregion
+
+        #region OnGamePostInitialize
+
+        public void OnGamePostInitialize(EventArgs args)
+        {
+            TileProvider provider = new TileProvider(Main.maxTilesX, Main.maxTilesY);
             if (Netplay.IsServerRunning && (Main.tile != null))
             {
                 int x = 0, y = 0, w = provider.Width, h = provider.Height;
@@ -57,30 +81,9 @@ namespace FakeManager
             if (previous != null)
                 previous.Dispose();
             GC.Collect();
-
-            #endregion
-            TileCollectionType = typeof(TileProvider);
-            ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
-            ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
-            ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
         }
 
         #endregion
-        #region Dispose
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
-                ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
-                ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
-            }
-            base.Dispose(disposing);
-        }
-
-        #endregion
-
         #region OnSendData
 
         private void OnSendData(SendDataEventArgs args)
@@ -104,7 +107,7 @@ namespace FakeManager
         }
 
         #endregion
-        #region OnServerJoinLeave
+        #region OnServerJoin, OnServerLeave
 
         private void OnServerJoin(JoinEventArgs args) =>
             Personal[args.Who] = new FakeCollection(true);

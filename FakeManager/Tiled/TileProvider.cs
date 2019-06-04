@@ -11,34 +11,23 @@ namespace FakeManager
         private int _Width, _Height;
         public int Width => _Width;
         public int Height => _Height;
+
         #region Constructor
 
-        public TileProvider() : this(0, 0) { }
         public TileProvider(int Width, int Height)
         {
             _Width = Width;
             _Height = Height;
+            data = new StructTile[Width, Height];
         }
         
         #endregion
 
-        #region operator[]
+        #region operator[,]
 
         public ITile this[int X, int Y]
         {
-            get
-            {
-                if (data == null)
-                {
-                    if (_Width == 0)
-                        _Width = (Main.maxTilesY + 1);
-                    if (_Height == 0)
-                        _Height = (Main.maxTilesY + 1);
-                    data = new StructTile[Width, Height];
-                }
-
-                return new TileReference(data, X, Y);
-            }
+            get => new TileReference(data, X, Y);
 
             set => (new TileReference(data, X, Y)).CopyFrom(value);
         }

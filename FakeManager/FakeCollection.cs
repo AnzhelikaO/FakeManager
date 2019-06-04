@@ -1,4 +1,5 @@
 #region Using
+using OTAPI.Tile;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -25,7 +26,7 @@ namespace FakeManager
         #region Add
 
         public FakeTileRectangle Add(object Key, int X, int Y,
-            int Width, int Height, TileProvider Tile = null)
+            int Width, int Height, ITileCollection Tile = null)
         {
             lock (Locker)
             {

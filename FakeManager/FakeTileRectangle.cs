@@ -24,7 +24,7 @@ namespace FakeManager
         #region Constructor [TileProvider]
 
         public FakeTileRectangle(FakeCollection Collection, int X, int Y,
-            int Width, int Height, TileProvider Tile = null)
+            int Width, int Height, ITileCollection Tile = null)
         {
             this.Collection = Collection;
             this.Tile = new TileProvider(Width, Height);
