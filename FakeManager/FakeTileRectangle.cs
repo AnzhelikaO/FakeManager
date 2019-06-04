@@ -11,7 +11,7 @@ namespace FakeManager
     {
         #region Data
 
-        public TileProvider Tile;
+        public FakeTileProvider Tile;
         public int X, Y, Width, Height;
         public bool Enabled = true;
         public FakeCollection Collection;
@@ -27,7 +27,7 @@ namespace FakeManager
             int Width, int Height, ITileCollection Tile = null)
         {
             this.Collection = Collection;
-            this.Tile = new TileProvider(Width, Height);
+            this.Tile = new FakeTileProvider(Width, Height);
             for (int i = 0; i < Width; i++)
                 for (int j = 0; j < Height; j++)
                     if (this.Tile[i, j] == null)
@@ -83,7 +83,7 @@ namespace FakeManager
             this.Y = Y;
             if ((this.Width != Width) || (this.Height != Height))
             {
-                TileProvider newTile = new TileProvider(Width, Height);
+                FakeTileProvider newTile = new FakeTileProvider(Width, Height);
                 for (int i = 0; i < Width; i++)
                     for (int j = 0; j < Height; j++)
                         if (i < this.Width && j < this.Height)

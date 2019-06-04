@@ -66,7 +66,7 @@ namespace FakeManager
         #endregion
         #region Resize
 
-        public FakeTileRectangle Resize(object Key, int Width, int Height, TileProvider Tile = null)
+        public FakeTileRectangle Resize(object Key, int Width, int Height, FakeTileProvider Tile = null)
         {
             if (!Data.ContainsKey(Key))
                 throw new KeyNotFoundException(Key.ToString());

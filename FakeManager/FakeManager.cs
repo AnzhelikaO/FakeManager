@@ -56,7 +56,7 @@ namespace FakeManager
 
         public void OnGamePostInitialize(EventArgs args)
         {
-            TileProvider provider = new TileProvider(Main.maxTilesX, Main.maxTilesY);
+            FakeTileProvider provider = new FakeTileProvider(Main.maxTilesX, Main.maxTilesY);
             if (Netplay.IsServerRunning && (Main.tile != null))
             {
                 int x = 0, y = 0, w = provider.Width, h = provider.Height;

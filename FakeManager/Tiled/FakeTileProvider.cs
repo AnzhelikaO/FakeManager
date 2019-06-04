@@ -5,7 +5,7 @@ using Terraria;
 #endregion
 namespace FakeManager
 {
-    public class TileProvider : ITileCollection, IDisposable
+    public class FakeTileProvider : ITileCollection, IDisposable
     {
         private StructTile[,] data;
         private int _Width, _Height;
@@ -14,7 +14,7 @@ namespace FakeManager
 
         #region Constructor
 
-        public TileProvider(int Width, int Height)
+        public FakeTileProvider(int Width, int Height)
         {
             _Width = Width;
             _Height = Height;
