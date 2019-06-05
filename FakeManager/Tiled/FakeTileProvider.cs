@@ -1,7 +1,6 @@
 ﻿#region Using
 using OTAPI.Tile;
 using System;
-using Terraria;
 #endregion
 namespace FakeManager
 {

@@ -105,24 +105,27 @@ namespace FakeManager
             if (Sign == null)
                 throw new ArgumentNullException(nameof(Sign), "Sign is null.");
 
-            KeyValuePair<int, Sign>[] signs = FakeSigns.Where(s =>
-                ((s.Value.x == Sign.x) && (s.Value.y == Sign.y))).ToArray();
-            if (signs.Length == 0)
+            lock (FakeSigns)
             {
-                int index = -1;
-                for (int i = 999; i >= 0; i--)
-                    if (Main.sign[i] == null)
-                    {
-                        index = i;
-                        break;
-                    }
-                if (index == -1)
-                    throw new Exception("Could not add a sign.");
-                Main.sign[index] = SignPlaceholder;
-                FakeSigns.Add(index, Sign);
+                KeyValuePair<int, Sign>[] signs = FakeSigns.Where(s =>
+                    ((s.Value.x == Sign.x) && (s.Value.y == Sign.y))).ToArray();
+                if (signs.Length == 0)
+                {
+                    int index = -1;
+                    for (int i = 999; i >= 0; i--)
+                        if (Main.sign[i] == null)
+                        {
+                            index = i;
+                            break;
+                        }
+                    if (index == -1)
+                        throw new Exception("Could not add a sign.");
+                    Main.sign[index] = SignPlaceholder;
+                    FakeSigns.Add(index, Sign);
+                }
+                else
+                    FakeSigns[signs[0].Key] = Sign;
             }
-            else
-                FakeSigns[signs[0].Key] = Sign;
         }
 
         #endregion
@@ -137,14 +140,17 @@ namespace FakeManager
 
         public bool RemoveSign(int X, int Y)
         {
-            KeyValuePair<int, Sign>[] signs = FakeSigns.Where(s =>
-                ((s.Value.x == X) && (s.Value.y == Y))).ToArray();
-            if (signs.Length != 1)
-                return false;
-            int index = signs[0].Key;
-            Main.sign[index] = null;
-            FakeSigns.Remove(index);
-            return true;
+            lock (FakeSigns)
+            {
+                KeyValuePair<int, Sign>[] signs = FakeSigns.Where(s =>
+                    ((s.Value.x == X) && (s.Value.y == Y))).ToArray();
+                if (signs.Length != 1)
+                    return false;
+                int index = signs[0].Key;
+                Main.sign[index] = null;
+                FakeSigns.Remove(index);
+                return true;
+            }
         }
 
         #endregion
@@ -177,7 +183,7 @@ namespace FakeManager
 
         #endregion
 
-        #region Apply
+        #region ApplyTiles
 
         public void ApplyTiles(ITile[,] Tiles, int AbsoluteX, int AbsoluteY)
         {
@@ -194,6 +200,9 @@ namespace FakeManager
                 }
         }
 
+        #endregion
+        #region ApplySigns
+
         public void ApplySigns(Dictionary<int, Sign> Signs,
             int AbsoluteX, int AbsoluteY, int Width, int Height)
         {
@@ -201,12 +210,13 @@ namespace FakeManager
                 out int x1, out int y1, out int w, out int h);
             int x2 = (x1 + w), y2 = (y1 + h);
 
-            foreach (KeyValuePair<int, Sign> pair in FakeSigns)
-            {
-                int x = pair.Value.x, y = pair.Value.y;
-                if ((x >= x1) && (x < x2) && (y >= y1) && (y < y2))
-                    Signs.Add(pair.Key, pair.Value);
-            }
+            lock (FakeSigns)
+                foreach (KeyValuePair<int, Sign> pair in FakeSigns)
+                {
+                    int x = pair.Value.x, y = pair.Value.y;
+                    if ((x >= x1) && (x < x2) && (y >= y1) && (y < y2))
+                        Signs.Add(pair.Key, pair.Value);
+                }
         }
 
         #endregion
