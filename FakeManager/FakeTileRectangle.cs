@@ -97,6 +97,10 @@ namespace FakeManager
         }
 
         #endregion
+        #region Update
+        public void Update() { }
+
+        #endregion
 
         #region AddSign
 

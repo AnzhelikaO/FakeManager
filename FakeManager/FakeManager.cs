@@ -29,7 +29,7 @@ namespace FakeManager
 
         public override void Initialize()
         {
-            ServerApi.Hooks.GamePostInitialize.Register(this, OnGamePostInitialize);
+            ServerApi.Hooks.GamePostInitialize.Register(this, ChangeMainTile, Int32.MaxValue);
             ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
             ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
             ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
@@ -42,7 +42,7 @@ namespace FakeManager
         {
             if (disposing)
             {
-                ServerApi.Hooks.GamePostInitialize.Deregister(this, OnGamePostInitialize);
+                ServerApi.Hooks.GamePostInitialize.Deregister(this, ChangeMainTile);
                 ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
                 ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
                 ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
@@ -52,9 +52,9 @@ namespace FakeManager
 
         #endregion
 
-        #region OnGamePostInitialize
+        #region ChangeMainTile
 
-        public void OnGamePostInitialize(EventArgs args)
+        public void ChangeMainTile(EventArgs args)
         {
             FakeTileProvider provider = new FakeTileProvider(Main.maxTilesX, Main.maxTilesY);
             if (Netplay.IsServerRunning && (Main.tile != null))
