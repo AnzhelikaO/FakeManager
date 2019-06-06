@@ -3,6 +3,7 @@ using OTAPI.Tile;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using Terraria;
 using TerrariaApi.Server;
@@ -30,6 +31,7 @@ namespace FakeManager
         public override void Initialize()
         {
             ServerApi.Hooks.GamePostInitialize.Register(this, ChangeMainTile, Int32.MaxValue);
+            ServerApi.Hooks.NetGetData.Register(this, OnGetData, int.MaxValue);
             ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
             ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
             ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
@@ -43,6 +45,7 @@ namespace FakeManager
             if (disposing)
             {
                 ServerApi.Hooks.GamePostInitialize.Deregister(this, ChangeMainTile);
+                ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
                 ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
                 ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
                 ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
@@ -83,6 +86,21 @@ namespace FakeManager
             GC.Collect();
         }
 
+        #endregion
+        #region OnGetData
+        
+        private void OnGetData(GetDataEventArgs args)
+        {
+            if (args.Handled || args.MsgID != PacketTypes.ChestGetContents)
+                return;
+            Console.WriteLine(string.Join(", ", args.Msg.readBuffer.Take(30)));
+            int x = args.Msg.readBuffer[args.Index] + args.Msg.readBuffer[args.Index + 1] * 256;
+            int y = args.Msg.readBuffer[args.Index + 2] + args.Msg.readBuffer[args.Index + 3] * 256;
+            Dictionary<int, Chest> chests = GetAppliedChests(args.Msg.whoAmI, x, y, 1, 1);
+            if (chests.Count > 0)
+                SendChestItemPacket.SendMany(args.Msg.whoAmI, 999, chests.Last().Value.item);
+        }
+        
         #endregion
         #region OnSendData
 
@@ -175,6 +193,39 @@ namespace FakeManager
             }
 
             return signs;
+        }
+
+        #endregion
+        #region GetAppliedChests
+
+        public static Dictionary<int, Chest> GetAppliedChests(int PlayerIndex,
+            int X, int Y, int Width, int Height)
+        {
+            Dictionary<int, Chest> chests = new Dictionary<int, Chest>();
+            int X2 = (X + Width), Y2 = (Y + Height);
+            for (int i = 0; i < Main.chest.Length; i++)
+            {
+                Chest chest = Main.chest[i];
+                if ((chest != null) && (chest.x >= X) && (chest.x < X2)
+                        && (chest.y >= Y) && (chest.y < Y2))
+                    chests.Add(i, chest);
+            }
+
+            for (int i = 0; i < Common.Order.Count; i++)
+            {
+                FakeTileRectangle fake = Common.Data[Common.Order[i]];
+                if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
+                    fake.ApplyChests(chests, X, Y, Width, Height);
+            }
+
+            for (int i = 0; i < Personal[PlayerIndex].Order.Count; i++)
+            {
+                FakeTileRectangle fake = Personal[PlayerIndex].Data[Personal[PlayerIndex].Order[i]];
+                if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
+                    fake.ApplyChests(chests, X, Y, Width, Height);
+            }
+
+            return chests;
         }
 
         #endregion

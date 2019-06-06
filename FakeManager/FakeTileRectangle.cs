@@ -17,6 +17,8 @@ namespace FakeManager
         public FakeCollection Collection;
         private Dictionary<int, Sign> FakeSigns;
         private Sign SignPlaceholder = new Sign() { x = -1, y = -1 };
+        private Dictionary<int, Chest> FakeChests;
+        private Chest ChestPlaceholder = new Chest() { x = -1, y = -1 };
 
         public bool IsPersonal => Collection.IsPersonal;
 
@@ -45,6 +47,7 @@ namespace FakeManager
                             this.Tile[i - X, j - Y].CopyFrom(t);
                     }
             this.FakeSigns = new Dictionary<int, Sign>();
+            this.FakeChests = new Dictionary<int, Chest>();
         }
 
         #endregion
@@ -158,6 +161,62 @@ namespace FakeManager
         }
 
         #endregion
+        #region AddChest
+
+        public void AddChest(Chest Chest)
+        {
+            if (Chest == null)
+                throw new ArgumentNullException(nameof(Chest), "Chest is null.");
+
+            lock (FakeChests)
+            {
+                KeyValuePair<int, Chest>[] chests = FakeChests.Where(s =>
+                    ((s.Value.x == Chest.x) && (s.Value.y == Chest.y))).ToArray();
+                if (chests.Length == 0)
+                {
+                    int index = -1;
+                    for (int i = 999; i >= 0; i--)
+                        if (Main.chest[i] == null)
+                        {
+                            index = i;
+                            break;
+                        }
+                    if (index == -1)
+                        throw new Exception("Could not add a chest.");
+                    Main.chest[index] = ChestPlaceholder;
+                    FakeChests.Add(index, Chest);
+                }
+                else
+                    FakeChests[chests[0].Key] = Chest;
+            }
+        }
+
+        #endregion
+        #region RemoveChest
+
+        public bool RemoveChest(Chest Chest)
+        {
+            if (Chest == null)
+                throw new ArgumentNullException(nameof(Chest), "Chest is null.");
+            return RemoveChest(Chest.x, Chest.y);
+        }
+
+        public bool RemoveChest(int X, int Y)
+        {
+            lock (FakeChests)
+            {
+                KeyValuePair<int, Chest>[] chests = FakeChests.Where(s =>
+                    ((s.Value.x == X) && (s.Value.y == Y))).ToArray();
+                if (chests.Length != 1)
+                    return false;
+                int index = chests[0].Key;
+                Main.chest[index] = null;
+                FakeChests.Remove(index);
+                return true;
+            }
+        }
+
+        #endregion
 
         #region Intersect
 
@@ -220,6 +279,25 @@ namespace FakeManager
                     int x = pair.Value.x, y = pair.Value.y;
                     if ((x >= x1) && (x < x2) && (y >= y1) && (y < y2))
                         Signs.Add(pair.Key, pair.Value);
+                }
+        }
+
+        #endregion
+        #region ApplyChests
+
+        public void ApplyChests(Dictionary<int, Chest> Chests,
+            int AbsoluteX, int AbsoluteY, int Width, int Height)
+        {
+            Intersect(AbsoluteX, AbsoluteY, Width, Height,
+                out int x1, out int y1, out int w, out int h);
+            int x2 = (x1 + w), y2 = (y1 + h);
+
+            lock (FakeChests)
+                foreach (KeyValuePair<int, Chest> pair in FakeChests)
+                {
+                    int x = pair.Value.x, y = pair.Value.y;
+                    if ((x >= x1) && (x < x2) && (y >= y1) && (y < y2))
+                        Chests.Add(pair.Key, pair.Value);
                 }
         }
 

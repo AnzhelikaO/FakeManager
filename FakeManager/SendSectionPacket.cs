@@ -110,9 +110,7 @@ namespace FakeManager
         private static void CompressTileBlock_Inner(int PlayerIndex,
             BinaryWriter BinaryWriter, int XStart, int YStart, int Width, int Height)
         {
-            short[] array = new short[1000];
             short[] array3 = new short[1000];
-            short num = 0;
             short num3 = 0;
             short num4 = 0;
             int num5 = 0;
@@ -168,24 +166,6 @@ namespace FakeManager
                                 array4[num5] = (byte)(tile2.type >> 8);
                                 num5++;
                                 b |= 32;
-                            }
-                            if (Terraria.ID.TileID.Sets.BasicChest[(int)tile2.type] && tile2.frameX % 36 == 0 && tile2.frameY % 36 == 0)
-                            {
-                                short num7 = (short)Chest.FindChest(j, i);
-                                if (num7 != -1)
-                                {
-                                    array[(int)num] = num7;
-                                    num += 1;
-                                }
-                            }
-                            if (tile2.type == 88 && tile2.frameX % 54 == 0 && tile2.frameY % 36 == 0)
-                            {
-                                short num8 = (short)Chest.FindChest(j, i);
-                                if (num8 != -1)
-                                {
-                                    array[(int)num] = num8;
-                                    num += 1;
-                                }
                             }
                             if (tile2.type == 378 && tile2.frameX % 36 == 0 && tile2.frameY == 0)
                             {
@@ -328,11 +308,14 @@ namespace FakeManager
             }
             array4[num6] = b;
             BinaryWriter.Write(array4, num6, num5 - num6);
-            BinaryWriter.Write(num);
-            for (int k = 0; k < (int)num; k++)
+
+            Dictionary<int, Chest> chests =
+                FakeManager.GetAppliedChests(PlayerIndex, XStart, YStart, Width, Height);
+            BinaryWriter.Write((short)chests.Count);
+            foreach (KeyValuePair<int, Chest> pair in chests)
             {
-                Chest chest = Main.chest[(int)array[k]];
-                BinaryWriter.Write(array[k]);
+                Chest chest = pair.Value;
+                BinaryWriter.Write((short)pair.Key);
                 BinaryWriter.Write((short)chest.x);
                 BinaryWriter.Write((short)chest.y);
                 BinaryWriter.Write(chest.name);
