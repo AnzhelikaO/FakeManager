@@ -97,10 +97,6 @@ namespace FakeManager
         }
 
         #endregion
-        #region Update
-        public void Update() { }
-
-        #endregion
 
         #region AddSign
 
@@ -208,11 +204,20 @@ namespace FakeManager
         #region ApplySigns
 
         public void ApplySigns(Dictionary<int, Sign> Signs,
-            int AbsoluteX, int AbsoluteY, int Width, int Height)
+            int AbsoluteX, int AbsoluteY, int Width, int Height,
+            bool ClearIntersectingSigns = false)
         {
             Intersect(AbsoluteX, AbsoluteY, Width, Height,
                 out int x1, out int y1, out int w, out int h);
             int x2 = (x1 + w), y2 = (y1 + h);
+
+            if (ClearIntersectingSigns)
+                foreach (int key in Signs.Keys)
+                {
+                    int x = Signs[key].x, y = Signs[key].y;
+                    if ((x >= x1) && (x < x2) && (y >= y1) && (y < y2))
+                        Signs.Remove(key);
+                }
 
             lock (FakeSigns)
                 foreach (KeyValuePair<int, Sign> pair in FakeSigns)

@@ -1,9 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 namespace FakeManager
 {
-    /// <summary>
-    /// StructTile maps the tile data directly to memory rather than having to manipulate bytes
-    /// </summary>
 	[StructLayout(LayoutKind.Sequential, Size = 13, Pack = 1)]
     public struct StructTile
     {

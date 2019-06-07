@@ -2,7 +2,6 @@
 using OTAPI.Tile;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Reflection;
 using Terraria;
 using TerrariaApi.Server;
@@ -21,7 +20,7 @@ namespace FakeManager
         public FakeManager(Main game) : base(game) { }
 
         public static FakeCollection Common = new FakeCollection();
-        public static FakeCollection[] Personal = new FakeCollection[255];
+        public static FakeCollection[] Personal = new FakeCollection[Main.maxPlayers];
 
         #endregion
 
@@ -29,7 +28,6 @@ namespace FakeManager
 
         public override void Initialize()
         {
-            ServerApi.Hooks.GamePostInitialize.Register(this, ChangeMainTile, Int32.MaxValue);
             ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
             ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
             ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
@@ -42,7 +40,6 @@ namespace FakeManager
         {
             if (disposing)
             {
-                ServerApi.Hooks.GamePostInitialize.Deregister(this, ChangeMainTile);
                 ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
                 ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
                 ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
@@ -52,38 +49,6 @@ namespace FakeManager
 
         #endregion
 
-        #region ChangeMainTile
-
-        public void ChangeMainTile(EventArgs args)
-        {
-            FakeTileProvider provider = new FakeTileProvider(Main.maxTilesX, Main.maxTilesY);
-            if (Netplay.IsServerRunning && (Main.tile != null))
-            {
-                int x = 0, y = 0, w = provider.Width, h = provider.Height;
-                try
-                {
-                    provider[0, 0].ClearTile();
-
-                    for (x = 0; x < w; x++)
-                        for (y = 0; y < h; y++)
-                            provider[x, y] = Main.tile[x, y];
-                }
-                catch (Exception ex)
-                {
-                    ServerApi.LogWriter.PluginWriteLine(this,
-                        $"Error @{x}x{y}\n{ex}", TraceLevel.Error);
-                    Environment.Exit(0);
-                }
-            }
-
-            IDisposable previous = Main.tile as IDisposable;
-            Main.tile = provider;
-            if (previous != null)
-                previous.Dispose();
-            GC.Collect();
-        }
-
-        #endregion
         #region OnSendData
 
         private void OnSendData(SendDataEventArgs args)
@@ -112,14 +77,20 @@ namespace FakeManager
         private void OnServerJoin(JoinEventArgs args) =>
             Personal[args.Who] = new FakeCollection(true);
 
-        private void OnServerLeave(LeaveEventArgs args) =>
+        private void OnServerLeave(LeaveEventArgs args)
+        {
+            FakeCollection collection = Personal[args.Who];
+            if (collection == null)
+                return;
+            collection.Clear();
             Personal[args.Who] = null;
+        }
 
         #endregion
 
         #region GetAppliedTiles
 
-        public static ITile[,] GetAppliedTiles(int PlayerIndex, int X, int Y, int Width, int Height)
+        public static ITile[,] GetAppliedTiles(int Who, int X, int Y, int Width, int Height)
         {
             ITile[,] tiles = new ITile[Width, Height];
             int X2 = (X + Width), Y2 = (Y + Height);
@@ -134,9 +105,9 @@ namespace FakeManager
                     fake.ApplyTiles(tiles, X, Y);
             }
 
-            for (int i = 0; i < Personal[PlayerIndex].Order.Count; i++)
+            for (int i = 0; i < Personal[Who].Order.Count; i++)
             {
-                FakeTileRectangle fake = Personal[PlayerIndex].Data[Personal[PlayerIndex].Order[i]];
+                FakeTileRectangle fake = Personal[Who].Data[Personal[Who].Order[i]];
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
                     fake.ApplyTiles(tiles, X, Y);
             }
@@ -147,7 +118,7 @@ namespace FakeManager
         #endregion
         #region GetAppliedSigns
 
-        public static Dictionary<int, Sign> GetAppliedSigns(int PlayerIndex,
+        public static Dictionary<int, Sign> GetAppliedSigns(int Who,
             int X, int Y, int Width, int Height)
         {
             Dictionary<int, Sign> signs = new Dictionary<int, Sign>();
@@ -167,9 +138,9 @@ namespace FakeManager
                     fake.ApplySigns(signs, X, Y, Width, Height);
             }
 
-            for (int i = 0; i < Personal[PlayerIndex].Order.Count; i++)
+            for (int i = 0; i < Personal[Who].Order.Count; i++)
             {
-                FakeTileRectangle fake = Personal[PlayerIndex].Data[Personal[PlayerIndex].Order[i]];
+                FakeTileRectangle fake = Personal[Who].Data[Personal[Who].Order[i]];
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
                     fake.ApplySigns(signs, X, Y, Width, Height);
             }

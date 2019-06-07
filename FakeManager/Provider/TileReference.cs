@@ -469,9 +469,9 @@ namespace FakeManager
         #region halfBrick
 
         public bool halfBrick() => ((sTileHeader & 1024) == 1024);
-        public void halfBrick(bool halfBrick)
+        public void halfBrick(bool HalfBrick)
         {
-            if (halfBrick)
+            if (HalfBrick)
                 sTileHeader |= 1024;
             else
                 sTileHeader = (short)(sTileHeader & 64511);
@@ -521,8 +521,8 @@ namespace FakeManager
         }
 
         #endregion
-        public bool HasSameSlope(ITile tile) =>
-            ((sTileHeader & 29696) == (tile.sTileHeader & 29696));
+        public bool HasSameSlope(ITile Tile) =>
+            ((sTileHeader & 29696) == (Tile.sTileHeader & 29696));
         #region blockType
 
         public int blockType()

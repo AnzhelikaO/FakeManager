@@ -11,18 +11,18 @@ namespace FakeManager
     {
         #region Send
 
-        public static void Send(int PlayerIndex, int IgnoreIndex,
+        public static void Send(int Who, int IgnoreIndex,
             int X, int Y, short Width, short Height)
         {
-            if (PlayerIndex == -1)
+            if (Who == -1)
             {
                 for (int i = 0; i < 256; i++)
                     Send(i, IgnoreIndex, X, Y, Width, Height);
                 return;
             }
 
-            RemoteClient client = Netplay.Clients[PlayerIndex];
-            if ((PlayerIndex == IgnoreIndex) || (client?.IsActive != true))
+            RemoteClient client = Netplay.Clients[Who];
+            if ((Who == IgnoreIndex) || (client?.IsActive != true))
                 return;
 
             using (MemoryStream ms = new MemoryStream())
@@ -31,7 +31,7 @@ namespace FakeManager
                 bw.BaseStream.Position = 2L;
                 bw.Write((byte)PacketTypes.TileSendSection);
                 byte[] array = new byte[260000];
-                int count = CompressTileBlock(PlayerIndex, X, Y, Width, Height, array, 0);
+                int count = CompressTileBlock(Who, X, Y, Width, Height, array, 0);
                 bw.Write(array, 0, count);
                 long position = bw.BaseStream.Position;
                 bw.BaseStream.Position = 0L;
@@ -46,24 +46,24 @@ namespace FakeManager
         #endregion
         #region CompressTileBlock
 
-        private static int CompressTileBlock(int PlayerIndex,
-            int XStart, int YStart, short Width, short Height,
+        private static int CompressTileBlock(int Who,
+            int X, int Y, short Width, short Height,
             byte[] Buffer, int BufferStart)
         {
-            if (XStart + Width > Main.maxTilesX)
-                Width = (short)(Main.maxTilesX - XStart);
-            if (YStart + Height > Main.maxTilesY)
-                Height = (short)(Main.maxTilesY - YStart);
+            if (X + Width > Main.maxTilesX)
+                Width = (short)(Main.maxTilesX - X);
+            if (Y + Height > Main.maxTilesY)
+                Height = (short)(Main.maxTilesY - Y);
             int result;
             using (MemoryStream memoryStream = new MemoryStream())
             {
                 using (BinaryWriter binaryWriter = new BinaryWriter(memoryStream))
                 {
-                    binaryWriter.Write(XStart);
-                    binaryWriter.Write(YStart);
+                    binaryWriter.Write(X);
+                    binaryWriter.Write(Y);
                     binaryWriter.Write(Width);
                     binaryWriter.Write(Height);
-                    CompressTileBlock_Inner(PlayerIndex, binaryWriter, XStart, YStart, (int)Width, (int)Height);
+                    CompressTileBlock_Inner(Who, binaryWriter, X, Y, (int)Width, (int)Height);
                     int num = Buffer.Length;
                     if ((long)BufferStart + memoryStream.Length > (long)num)
                     {
@@ -107,8 +107,8 @@ namespace FakeManager
         #endregion
         #region CompressTileBlock_Inner
 
-        private static void CompressTileBlock_Inner(int PlayerIndex,
-            BinaryWriter BinaryWriter, int XStart, int YStart, int Width, int Height)
+        private static void CompressTileBlock_Inner(int Who,
+            BinaryWriter BinaryWriter, int X, int Y, int Width, int Height)
         {
             short[] array = new short[1000];
             short[] array3 = new short[1000];
@@ -122,12 +122,12 @@ namespace FakeManager
             OTAPI.Tile.ITile tile = null;
 
             OTAPI.Tile.ITile[,] tiles =
-                FakeManager.GetAppliedTiles(PlayerIndex, XStart, YStart, Width, Height);
-            for (int i = YStart; i < YStart + Height; i++)
+                FakeManager.GetAppliedTiles(Who, X, Y, Width, Height);
+            for (int i = Y; i < Y + Height; i++)
             {
-                for (int j = XStart; j < XStart + Width; j++)
+                for (int j = X; j < X + Width; j++)
                 {
-                    OTAPI.Tile.ITile tile2 = tiles[j - XStart, i - YStart];
+                    OTAPI.Tile.ITile tile2 = tiles[j - X, i - Y];
                     if (tile2.isTheSameAs(tile))
                     {
                         num4 += 1;
@@ -339,7 +339,7 @@ namespace FakeManager
             }
 
             Dictionary<int, Sign> signs =
-                FakeManager.GetAppliedSigns(PlayerIndex, XStart, YStart, Width, Height);
+                FakeManager.GetAppliedSigns(Who, X, Y, Width, Height);
             BinaryWriter.Write((short)signs.Count);
             foreach (KeyValuePair<int, Sign> pair in signs)
             {

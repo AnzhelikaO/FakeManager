@@ -9,18 +9,18 @@ namespace FakeManager
     {
         #region Send
 
-        public static void Send(int PlayerIndex, int IgnoreIndex,
+        public static void Send(int Who, int IgnoreIndex,
             int Size, int X, int Y, int Number5 = 0)
         {
-            if (PlayerIndex == -1)
+            if (Who == -1)
             {
                 for (int i = 0; i < 256; i++)
                     Send(i, IgnoreIndex, Size, X, Y, Number5);
                 return;
             }
 
-            RemoteClient client = Netplay.Clients[PlayerIndex];
-            if ((PlayerIndex == IgnoreIndex) || (client?.IsActive != true))
+            RemoteClient client = Netplay.Clients[Who];
+            if ((Who == IgnoreIndex) || (client?.IsActive != true))
                 return;
 
             using (MemoryStream ms = new MemoryStream())
@@ -28,7 +28,7 @@ namespace FakeManager
             {
                 bw.BaseStream.Position = 2L;
                 bw.Write((byte)PacketTypes.TileSendSquare);
-                WriteTiles(bw, PlayerIndex, Size, X, Y, Number5);
+                WriteTiles(bw, Who, Size, X, Y, Number5);
                 long position = bw.BaseStream.Position;
                 bw.BaseStream.Position = 0L;
                 bw.Write((short)position);
@@ -43,7 +43,7 @@ namespace FakeManager
         #region WriteTiles
 
         private static void WriteTiles(BinaryWriter BinaryWriter,
-            int PlayerIndex, int Size, int X, int Y, int Number5 = 0)
+            int Who, int Size, int X, int Y, int Number5 = 0)
         {
             if (Size < 0)
             {
@@ -76,7 +76,7 @@ namespace FakeManager
             }
             BinaryWriter.Write((short)X);
             BinaryWriter.Write((short)Y);
-            OTAPI.Tile.ITile[,] applied = FakeManager.GetAppliedTiles(PlayerIndex, X, Y, Size, Size);
+            OTAPI.Tile.ITile[,] applied = FakeManager.GetAppliedTiles(Who, X, Y, Size, Size);
             for (int num8 = X; num8 < X + Size; num8++)
             {
                 for (int num9 = Y; num9 < Y + Size; num9++)

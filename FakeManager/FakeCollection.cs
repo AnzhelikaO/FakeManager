@@ -42,7 +42,7 @@ namespace FakeManager
         #endregion
         #region Remove
 
-        public bool Remove(object Key)
+        public bool Remove(object Key, bool Cleanup = true)
         {
             lock (Locker)
             {
@@ -55,6 +55,9 @@ namespace FakeManager
                 int w = (o.X + o.Width - 1), h = (o.Y + o.Height - 1);
                 int sx1 = Netplay.GetSectionX(x), sy1 = Netplay.GetSectionY(y);
                 int sx2 = Netplay.GetSectionX(w), sy2 = Netplay.GetSectionY(h);
+                o.Tile.Dispose();
+                if (Cleanup)
+                    GC.Collect();
                 NetMessage.SendData((int)PacketTypes.TileSendSection,
                     -1, -1, null, x, y, w, h);
                 NetMessage.SendData((int)PacketTypes.TileFrameSection,
@@ -87,7 +90,8 @@ namespace FakeManager
             {
                 List<object> keys = new List<object>(Data.Keys);
                 foreach (object key in keys)
-                    Remove(key);
+                    Remove(key, false);
+                GC.Collect();
             }
         }
 
