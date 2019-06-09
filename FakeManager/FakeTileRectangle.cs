@@ -97,6 +97,14 @@ namespace FakeManager
         }
 
         #endregion
+        #region Update
+
+        /// <summary>
+        /// blet ne udalyat nahui
+        /// </summary>
+        public void Update() { }
+
+        #endregion
 
         #region AddSign
 
