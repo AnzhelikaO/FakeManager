@@ -15,7 +15,7 @@ namespace FakeManager
         public int X, Y, Width, Height;
         public bool Enabled = true;
         public FakeCollection Collection;
-        private Dictionary<int, Sign> FakeSigns;
+        public Dictionary<int, Sign> FakeSigns;
         private Sign SignPlaceholder = new Sign() { x = -1, y = -1 };
 
         public bool IsPersonal => Collection.IsPersonal;
@@ -108,7 +108,7 @@ namespace FakeManager
 
         #region AddSign
 
-        public void AddSign(Sign Sign)
+        public void AddSign(Sign Sign, bool Replace = true)
         {
             if (Sign == null)
                 throw new ArgumentNullException(nameof(Sign), "Sign is null.");
@@ -117,7 +117,7 @@ namespace FakeManager
             {
                 KeyValuePair<int, Sign>[] signs = FakeSigns.Where(s =>
                     ((s.Value.x == Sign.x) && (s.Value.y == Sign.y))).ToArray();
-                if (signs.Length == 0)
+                if ((signs.Length == 0) || !Replace)
                 {
                     int index = -1;
                     for (int i = 999; i >= 0; i--)
