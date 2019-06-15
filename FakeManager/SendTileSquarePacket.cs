@@ -1,4 +1,6 @@
 ﻿#region Using
+using System;
+using System.Collections.Generic;
 using System.IO;
 using Terraria;
 using Terraria.Net.Sockets;
@@ -10,40 +12,54 @@ namespace FakeManager
         #region Send
 
         public static void Send(int Who, int IgnoreIndex,
+                int Size, int X, int Y, int Number5 = 0) =>
+            Send(((Who == -1) ? FakeManager.AllPlayers : new int[] { Who }),
+                IgnoreIndex, Size, X, Y, Number5);
+
+        public static void Send(IEnumerable<int> Who, int IgnoreIndex,
             int Size, int X, int Y, int Number5 = 0)
         {
-            if (Who == -1)
+            if (Who == null)
+                return;
+
+            List<RemoteClient> clients = new List<RemoteClient>();
+            foreach (int i in Who)
             {
-                for (int i = 0; i < 256; i++)
-                    Send(i, IgnoreIndex, Size, X, Y, Number5);
-                return;
+                if (i == IgnoreIndex)
+                    continue;
+                if ((i < 0) || (i >= Main.maxPlayers))
+                    throw new ArgumentOutOfRangeException(nameof(Who));
+                RemoteClient client = Netplay.Clients[i];
+                if (client?.IsActive == true)
+                    clients.Add(client);
             }
-
-            RemoteClient client = Netplay.Clients[Who];
-            if ((Who == IgnoreIndex) || (client?.IsActive != true))
+            if (clients.Count == 0)
                 return;
 
+            byte[] data;
             using (MemoryStream ms = new MemoryStream())
             using (BinaryWriter bw = new BinaryWriter(ms))
             {
                 bw.BaseStream.Position = 2L;
                 bw.Write((byte)PacketTypes.TileSendSquare);
-                WriteTiles(bw, Who, Size, X, Y, Number5);
+                WriteTiles(bw, Size, X, Y, Number5);
                 long position = bw.BaseStream.Position;
                 bw.BaseStream.Position = 0L;
                 bw.Write((short)position);
                 bw.BaseStream.Position = position;
-                byte[] data = ms.ToArray();
+                data = ms.ToArray();
+            }
+
+            foreach (RemoteClient client in clients)
                 client.Socket.AsyncSend(data, 0, data.Length,
                     new SocketSendCallback(client.ServerWriteCallBack), null);
-            }
         }
 
         #endregion
         #region WriteTiles
 
         private static void WriteTiles(BinaryWriter BinaryWriter,
-            int Who, int Size, int X, int Y, int Number5 = 0)
+            int Size, int X, int Y, int Number5 = 0)
         {
             if (Size < 0)
             {
@@ -76,7 +92,7 @@ namespace FakeManager
             }
             BinaryWriter.Write((short)X);
             BinaryWriter.Write((short)Y);
-            OTAPI.Tile.ITile[,] applied = FakeManager.GetAppliedTiles(Who, X, Y, Size, Size);
+            OTAPI.Tile.ITile[,] applied = FakeManager.GetAppliedTiles(X, Y, Size, Size);
             for (int num8 = X; num8 < X + Size; num8++)
             {
                 for (int num9 = Y; num9 < Y + Size; num9++)

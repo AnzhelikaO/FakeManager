@@ -18,7 +18,7 @@ namespace FakeManager
         public Dictionary<int, Sign> FakeSigns;
         private Sign SignPlaceholder = new Sign() { x = -1, y = -1 };
 
-        public bool IsPersonal => Collection.IsPersonal;
+        //public bool IsPersonal => Collection.IsPersonal;
 
         #endregion
         #region Constructor [TileProvider]

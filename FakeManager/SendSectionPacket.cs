@@ -1,7 +1,9 @@
 ﻿#region Using
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Terraria;
 using Terraria.Net.Sockets;
 #endregion
@@ -12,103 +14,113 @@ namespace FakeManager
         #region Send
 
         public static void Send(int Who, int IgnoreIndex,
+                int X, int Y, short Width, short Height) =>
+            Send(((Who == -1) ? FakeManager.AllPlayers : new int[] { Who }),
+                IgnoreIndex, X, Y, Width, Height);
+
+        public static void Send(IEnumerable<int> Who, int IgnoreIndex,
             int X, int Y, short Width, short Height)
         {
-            if (Who == -1)
+            if (Who == null)
+                return;
+
+            List<RemoteClient> clients = new List<RemoteClient>();
+            foreach (int i in Who)
             {
-                for (int i = 0; i < 256; i++)
-                    Send(i, IgnoreIndex, X, Y, Width, Height);
-                return;
+                if (i == IgnoreIndex)
+                    continue;
+                if ((i < 0) || (i >= Main.maxPlayers))
+                    throw new ArgumentOutOfRangeException(nameof(Who));
+                RemoteClient client = Netplay.Clients[i];
+                if (client?.IsActive == true)
+                    clients.Add(client);
             }
-
-            RemoteClient client = Netplay.Clients[Who];
-            if ((Who == IgnoreIndex) || (client?.IsActive != true))
+            if (clients.Count == 0)
                 return;
 
+            byte[] data;
             using (MemoryStream ms = new MemoryStream())
             using (BinaryWriter bw = new BinaryWriter(ms))
             {
                 bw.BaseStream.Position = 2L;
                 bw.Write((byte)PacketTypes.TileSendSection);
-                byte[] array = new byte[260000];
-                int count = CompressTileBlock(Who, X, Y, Width, Height, array, 0);
-                bw.Write(array, 0, count);
+                CompressTileBlock(X, Y, Width, Height, bw, 0);
                 long position = bw.BaseStream.Position;
                 bw.BaseStream.Position = 0L;
                 bw.Write((short)position);
                 bw.BaseStream.Position = position;
-                byte[] data = ms.ToArray();
+                data = ms.ToArray();
+            }
+
+            foreach (RemoteClient client in clients)
                 client.Socket.AsyncSend(data, 0, data.Length,
                     new SocketSendCallback(client.ServerWriteCallBack), null);
-            }
         }
 
         #endregion
         #region CompressTileBlock
 
-        private static int CompressTileBlock(int Who,
-            int X, int Y, short Width, short Height,
-            byte[] Buffer, int BufferStart)
+        internal static int CompressTileBlock(int X, int Y, short Width, short Height,
+            BinaryWriter BinaryWriter, int BufferStart)
         {
-            if (X + Width > Main.maxTilesX)
-                Width = (short)(Main.maxTilesX - X);
-            if (Y + Height > Main.maxTilesY)
-                Height = (short)(Main.maxTilesY - Y);
-            int result;
-            using (MemoryStream memoryStream = new MemoryStream())
+            if (X < 0)
             {
-                using (BinaryWriter binaryWriter = new BinaryWriter(memoryStream))
+                Width += (short)X;
+                X = 0;
+            }
+            if (Y < 0)
+            {
+                Height += (short)Y;
+                Y = 0;
+            }
+            if ((X + Width) > Main.maxTilesX)
+                Width = (short)(Main.maxTilesX - X);
+            if ((Y + Height) > Main.maxTilesY)
+                Height = (short)(Main.maxTilesY - Y);
+            if ((Width == 0) || (Height == 0))
+                return 0;
+            
+            using (MemoryStream ms = new MemoryStream())
+            using (BinaryWriter bw = new BinaryWriter(ms))
+            {
+                bw.Write(X);
+                bw.Write(Y);
+                bw.Write(Width);
+                bw.Write(Height);
+                CompressTileBlock_Inner(bw, X, Y, Width, Height);
+                ms.Position = 0L;
+                using (MemoryStream ms2 = new MemoryStream())
                 {
-                    binaryWriter.Write(X);
-                    binaryWriter.Write(Y);
-                    binaryWriter.Write(Width);
-                    binaryWriter.Write(Height);
-                    CompressTileBlock_Inner(Who, binaryWriter, X, Y, (int)Width, (int)Height);
-                    int num = Buffer.Length;
-                    if ((long)BufferStart + memoryStream.Length > (long)num)
+                    using (DeflateStream ds = new DeflateStream(ms2, CompressionMode.Compress, true))
                     {
-                        result = (int)((long)(num - BufferStart) + memoryStream.Length);
+                        ms.CopyTo(ds);
+                        ds.Flush();
+                        ds.Close();
+                        ds.Dispose();
+                    }
+
+                    if (ms.Length <= ms2.Length)
+                    {
+                        ms.Position = 0L;
+                        BinaryWriter.Write((byte)0);
+                        BinaryWriter.Write(ms.GetBuffer());
                     }
                     else
                     {
-                        memoryStream.Position = 0L;
-                        using (MemoryStream memoryStream2 = new MemoryStream())
-                        {
-                            using (DeflateStream deflateStream = new DeflateStream(memoryStream2, CompressionMode.Compress, true))
-                            {
-                                memoryStream.CopyTo(deflateStream);
-                                deflateStream.Flush();
-                                deflateStream.Close();
-                                deflateStream.Dispose();
-                            }
-                            if (memoryStream.Length <= memoryStream2.Length)
-                            {
-                                memoryStream.Position = 0L;
-                                Buffer[BufferStart] = 0;
-                                BufferStart++;
-                                memoryStream.Read(Buffer, BufferStart, (int)memoryStream.Length);
-                                result = (int)memoryStream.Length + 1;
-                            }
-                            else
-                            {
-                                memoryStream2.Position = 0L;
-                                Buffer[BufferStart] = 1;
-                                BufferStart++;
-                                memoryStream2.Read(Buffer, BufferStart, (int)memoryStream2.Length);
-                                result = (int)memoryStream2.Length + 1;
-                            }
-                        }
+                        ms2.Position = 0L;
+                        BinaryWriter.Write((byte)1);
+                        BinaryWriter.Write(ms2.GetBuffer());
                     }
                 }
             }
-            return result;
+            return 0;
         }
 
         #endregion
         #region CompressTileBlock_Inner
 
-        private static void CompressTileBlock_Inner(int Who,
-            BinaryWriter BinaryWriter, int X, int Y, int Width, int Height)
+        private static void CompressTileBlock_Inner(BinaryWriter BinaryWriter,
+            int X, int Y, int Width, int Height)
         {
             short[] array = new short[1000];
             short[] array3 = new short[1000];
@@ -122,7 +134,7 @@ namespace FakeManager
             OTAPI.Tile.ITile tile = null;
 
             OTAPI.Tile.ITile[,] tiles =
-                FakeManager.GetAppliedTiles(Who, X, Y, Width, Height);
+                FakeManager.GetAppliedTiles(X, Y, Width, Height);
             for (int i = Y; i < Y + Height; i++)
             {
                 for (int j = X; j < X + Width; j++)
@@ -338,8 +350,7 @@ namespace FakeManager
                 BinaryWriter.Write(chest.name);
             }
 
-            Dictionary<int, Sign> signs =
-                FakeManager.GetAppliedSigns(Who, X, Y, Width, Height);
+            Dictionary<int, Sign> signs = FakeManager.GetAppliedSigns(X, Y, Width, Height);
             BinaryWriter.Write((short)signs.Count);
             foreach (KeyValuePair<int, Sign> pair in signs)
             {

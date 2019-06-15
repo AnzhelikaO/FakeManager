@@ -12,7 +12,7 @@ namespace FakeManager
 
         public Dictionary<object, FakeTileRectangle> Data = new Dictionary<object, FakeTileRectangle>();
         // The more is index in Order, the higher in hierarchy fake is.
-        public bool IsPersonal = false;
+        //public bool IsPersonal = false;
         // Anzh: Why did we have order as a public list?
         // We should probaly completely remake it, since it's not only for UI now.
         internal List<object> Order = new List<object>();
@@ -20,8 +20,14 @@ namespace FakeManager
         private object Locker = new object();
 
         #endregion
+        #region Constructor
+
+        /*
         public FakeCollection(bool IsPersonal = false) =>
             this.IsPersonal = IsPersonal;
+        */
+
+        #endregion
 
         #region Add
 

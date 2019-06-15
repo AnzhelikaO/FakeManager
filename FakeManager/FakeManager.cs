@@ -20,7 +20,8 @@ namespace FakeManager
         public FakeManager(Main game) : base(game) { }
 
         public static FakeCollection Common = new FakeCollection();
-        public static FakeCollection[] Personal = new FakeCollection[Main.maxPlayers];
+        //public static FakeCollection[] Personal = new FakeCollection[Main.maxPlayers];
+        internal static int[] AllPlayers;
 
         #endregion
 
@@ -28,9 +29,15 @@ namespace FakeManager
 
         public override void Initialize()
         {
+            AllPlayers = new int[Main.maxPlayers];
+            for (int i = 0; i < Main.maxPlayers; i++)
+                AllPlayers[i] = i;
+
             ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
+            /*
             ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
             ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
+            */
         }
 
         #endregion
@@ -41,8 +48,10 @@ namespace FakeManager
             if (disposing)
             {
                 ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
+                /*
                 ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
                 ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
+                */
             }
             base.Dispose(disposing);
         }
@@ -73,7 +82,7 @@ namespace FakeManager
 
         #endregion
         #region OnServerJoin, OnServerLeave
-
+        /*
         private void OnServerJoin(JoinEventArgs args) =>
             Personal[args.Who] = new FakeCollection(true);
 
@@ -85,12 +94,12 @@ namespace FakeManager
             collection.Clear();
             Personal[args.Who] = null;
         }
-
+        */
         #endregion
 
         #region GetAppliedTiles
 
-        public static ITile[,] GetAppliedTiles(int Who, int X, int Y, int Width, int Height)
+        public static ITile[,] GetAppliedTiles(int X, int Y, int Width, int Height)
         {
             ITile[,] tiles = new ITile[Width, Height];
             int X2 = (X + Width), Y2 = (Y + Height);
@@ -104,22 +113,21 @@ namespace FakeManager
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
                     fake.ApplyTiles(tiles, X, Y);
             }
-
+            /*
             for (int i = 0; i < Personal[Who].Order.Count; i++)
             {
                 FakeTileRectangle fake = Personal[Who].Data[Personal[Who].Order[i]];
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
                     fake.ApplyTiles(tiles, X, Y);
             }
-
+            */
             return tiles;
         }
 
         #endregion
         #region GetAppliedSigns
 
-        public static Dictionary<int, Sign> GetAppliedSigns(int Who,
-            int X, int Y, int Width, int Height)
+        public static Dictionary<int, Sign> GetAppliedSigns(int X, int Y, int Width, int Height)
         {
             Dictionary<int, Sign> signs = new Dictionary<int, Sign>();
             int X2 = (X + Width), Y2 = (Y + Height);
@@ -137,14 +145,14 @@ namespace FakeManager
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
                     fake.ApplySigns(signs, X, Y, Width, Height);
             }
-
+            /*
             for (int i = 0; i < Personal[Who].Order.Count; i++)
             {
                 FakeTileRectangle fake = Personal[Who].Data[Personal[Who].Order[i]];
                 if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
                     fake.ApplySigns(signs, X, Y, Width, Height);
             }
-
+            */
             return signs;
         }
 
