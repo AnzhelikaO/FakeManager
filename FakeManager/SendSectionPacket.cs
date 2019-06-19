@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.Sockets;
 using Terraria;
 using Terraria.Net.Sockets;
 #endregion
@@ -53,8 +54,13 @@ namespace FakeManager
             }
 
             foreach (RemoteClient client in clients)
-                client.Socket.AsyncSend(data, 0, data.Length,
-                    new SocketSendCallback(client.ServerWriteCallBack), null);
+                try
+                {
+                    client.Socket.AsyncSend(data, 0, data.Length,
+                        new SocketSendCallback(client.ServerWriteCallBack), null);
+                }
+                catch (IOException) { }
+                catch (ObjectDisposedException) { }
         }
 
         #endregion
