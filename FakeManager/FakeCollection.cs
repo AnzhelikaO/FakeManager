@@ -10,9 +10,10 @@ namespace FakeManager
     {
         #region Data
 
-        public Dictionary<object, FakeTileRectangle> Data = new Dictionary<object, FakeTileRectangle>();
+        protected internal Dictionary<object, FakeTileRectangle> Data =
+            new Dictionary<object, FakeTileRectangle>();
         // The more is index in Order, the higher in hierarchy fake is.
-        internal List<object> Order = new List<object>();
+        protected internal List<object> Order = new List<object>();
         private object Locker = new object();
 
         #endregion
@@ -22,6 +23,12 @@ namespace FakeManager
         public FakeCollection(bool IsPersonal = false) =>
             this.IsPersonal = IsPersonal;
         */
+
+        #endregion
+
+        #region operator[]
+
+        public FakeTileRectangle this[object Key] => Data[Key];
 
         #endregion
 

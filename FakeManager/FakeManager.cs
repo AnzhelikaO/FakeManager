@@ -19,7 +19,7 @@ namespace FakeManager
         public override string Description => "Plugin for creating zones with fake tiles and signs.";
         public FakeManager(Main game) : base(game) { }
 
-        public static FakeCollection Common = new FakeCollection();
+        public static FakeCollection Common { get; } = new FakeCollection();
         //public static FakeCollection[] Personal = new FakeCollection[Main.maxPlayers];
         internal static int[] AllPlayers;
 

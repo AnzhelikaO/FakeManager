@@ -11,20 +11,23 @@ namespace FakeManager
     {
         #region Data
 
-        public FakeTileProvider Tile;
-        public int X, Y, Width, Height;
-        public bool Enabled = true;
-        public FakeCollection Collection;
-        public Dictionary<int, Sign> FakeSigns;
+        protected internal FakeTileProvider Tile { get; set; }
+        public int X { get; protected set; }
+        public int Y { get; protected set; }
+        public int Width { get; protected set; }
+        public int Height { get; protected set; }
+        public bool Enabled { get; set; } = true;
+        public FakeCollection Collection { get; }
+        protected Dictionary<int, Sign> FakeSigns = new Dictionary<int, Sign>();
         private Sign SignPlaceholder = new Sign() { x = -1, y = -1 };
 
         //public bool IsPersonal => Collection.IsPersonal;
 
         #endregion
-        #region Constructor [ITileCollection]
+        #region Constructor
 
-        public FakeTileRectangle(FakeCollection Collection, int X, int Y,
-            int Width, int Height, ITileCollection CopyFrom = null)
+        public FakeTileRectangle(FakeCollection Collection,
+            int X, int Y, int Width, int Height)
         {
             this.Collection = Collection;
             this.Tile = new FakeTileProvider(Width, Height);
@@ -36,6 +39,14 @@ namespace FakeManager
             this.Y = Y;
             this.Width = Width;
             this.Height = Height;
+        }
+
+        #region ITileCollection
+
+        public FakeTileRectangle(FakeCollection Collection, int X, int Y,
+                int Width, int Height, ITileCollection CopyFrom)
+            : this(Collection, X, Y, Width, Height)
+        {
             if (CopyFrom != null)
                 for (int i = X; i < X + Width; i++)
                     for (int j = Y; j < Y + Height; j++)
@@ -44,37 +55,45 @@ namespace FakeManager
                         if (t != null)
                             this.Tile[i - X, j - Y].CopyFrom(t);
                     }
-            this.FakeSigns = new Dictionary<int, Sign>();
         }
 
         #endregion
-        #region Constructor [ITile[,]]
+        #region ITile[,]
 
         public FakeTileRectangle(FakeCollection Collection,
             int X, int Y, int Width, int Height, ITile[,] Tile)
             : this(Collection, X, Y, Width, Height)
         {
-            for (int i = X; i < X + Width; i++)
-                for (int j = Y; j < Y + Height; j++)
-                {
-                    ITile t = Tile[i, j];
-                    if (t != null)
-                        this.Tile[i - X, j - Y].CopyFrom(t);
-                }
+            if (Tile != null)
+                for (int i = X; i < X + Width; i++)
+                    for (int j = Y; j < Y + Height; j++)
+                    {
+                        ITile t = Tile[i, j];
+                        if (t != null)
+                            this.Tile[i - X, j - Y].CopyFrom(t);
+                    }
         }
+
+        #endregion
 
         #endregion
 
         #region operator[,]
 
-        public ITile this[int x, int y]
+        public ITile this[int X, int Y]
         {
-            get => Tile[x, y];
-            set => Tile[x, y] = value;
+            get => Tile[X, Y];
+            set => Tile[X, Y] = value;
         }
 
         #endregion
 
+        #region XYWH
+
+        public (int X, int Y, int Width, int Height) XYWH() =>
+            (X, Y, Width, Height);
+
+        #endregion
         #region SetXYWH
 
         public void SetXYWH(int X, int Y, int Width, int Height)
@@ -162,7 +181,7 @@ namespace FakeManager
 
         #region Intersect
 
-        public void Intersect(int X, int Y, int Width, int Height,
+        protected internal void Intersect(int X, int Y, int Width, int Height,
             out int RX, out int RY, out int RWidth, out int RHeight)
         {
             int ex1 = this.X + this.Width;
@@ -182,7 +201,7 @@ namespace FakeManager
         #endregion
         #region IsIntersecting
 
-        public bool IsIntersecting(int X, int Y, int Width, int Height) =>
+        protected internal bool IsIntersecting(int X, int Y, int Width, int Height) =>
             ((X < (this.X + this.Width)) && (this.X < (X + Width))
             && (Y < (this.Y + this.Height)) && (this.Y < (Y + Height)));
 
@@ -190,7 +209,7 @@ namespace FakeManager
 
         #region ApplyTiles
 
-        public void ApplyTiles(ITile[,] Tiles, int AbsoluteX, int AbsoluteY)
+        protected internal void ApplyTiles(ITile[,] Tiles, int AbsoluteX, int AbsoluteY)
         {
             Intersect(AbsoluteX, AbsoluteY, Tiles.GetLength(0), Tiles.GetLength(1),
                 out int x1, out int y1, out int w, out int h);
@@ -208,7 +227,7 @@ namespace FakeManager
         #endregion
         #region ApplySigns
 
-        public void ApplySigns(Dictionary<int, Sign> Signs,
+        protected internal void ApplySigns(Dictionary<int, Sign> Signs,
             int AbsoluteX, int AbsoluteY, int Width, int Height,
             bool ClearIntersectingSigns = false)
         {

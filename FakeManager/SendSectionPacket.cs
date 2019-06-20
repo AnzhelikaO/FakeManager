@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Net.Sockets;
 using Terraria;
 using Terraria.Net.Sockets;
 #endregion
@@ -45,7 +43,7 @@ namespace FakeManager
             {
                 bw.BaseStream.Position = 2L;
                 bw.Write((byte)PacketTypes.TileSendSection);
-                CompressTileBlock(X, Y, Width, Height, bw, 0);
+                CompressTileBlock(X, Y, Width, Height, bw);
                 long position = bw.BaseStream.Position;
                 bw.BaseStream.Position = 0L;
                 bw.Write((short)position);
@@ -66,8 +64,8 @@ namespace FakeManager
         #endregion
         #region CompressTileBlock
 
-        internal static int CompressTileBlock(int X, int Y, short Width, short Height,
-            BinaryWriter BinaryWriter, int BufferStart)
+        private static int CompressTileBlock(int X, int Y,
+            short Width, short Height, BinaryWriter BinaryWriter)
         {
             if (X < 0)
             {
