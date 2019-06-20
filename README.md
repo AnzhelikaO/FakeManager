@@ -3,6 +3,9 @@
 ## About
 Plugin for creating zones with fake tiles and signs.
 
+## Installing
+Add FakeManager.dll to ServerPlugins directory.
+
 ## FakeManager
 You can create a new fake zone using method FakeManager.Common.Add():
 ```cs
