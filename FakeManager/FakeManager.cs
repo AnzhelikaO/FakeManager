@@ -33,7 +33,7 @@ namespace FakeManager
             for (int i = 0; i < Main.maxPlayers; i++)
                 AllPlayers[i] = i;
 
-            ServerApi.Hooks.NetSendData.Register(this, OnSendData, int.MaxValue);
+            ServerApi.Hooks.NetSendData.Register(this, OnSendData, 1000000);
             /*
             ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
             ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);

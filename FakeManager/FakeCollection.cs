@@ -12,11 +12,7 @@ namespace FakeManager
 
         public Dictionary<object, FakeTileRectangle> Data = new Dictionary<object, FakeTileRectangle>();
         // The more is index in Order, the higher in hierarchy fake is.
-        //public bool IsPersonal = false;
-        // Anzh: Why did we have order as a public list?
-        // We should probaly completely remake it, since it's not only for UI now.
         internal List<object> Order = new List<object>();
-        // Anzh: Should we still use locker, or maybe use concurrent shit?
         private object Locker = new object();
 
         #endregion
@@ -32,13 +28,13 @@ namespace FakeManager
         #region Add
 
         public FakeTileRectangle Add(object Key, int X, int Y,
-            int Width, int Height, ITileCollection Tile = null)
+            int Width, int Height, ITileCollection CopyFrom = null)
         {
             lock (Locker)
             {
                 if (Data.ContainsKey(Key))
                     throw new ArgumentException($"Key '{Key}' is already in use.");
-                FakeTileRectangle fake = new FakeTileRectangle(this, X, Y, Width, Height, Tile);
+                FakeTileRectangle fake = new FakeTileRectangle(this, X, Y, Width, Height, CopyFrom);
                 Data.Add(Key, fake);
                 Order.Add(Key);
                 return fake;
@@ -105,13 +101,13 @@ namespace FakeManager
 
         #region SetTop
 
-        public void SetTop(object key)
+        public void SetTop(object Key)
         {
             lock (Locker)
             {
-                if (!Order.Remove(key))
-                    throw new KeyNotFoundException(key.ToString());
-                Order.Add(key);
+                if (!Order.Remove(Key))
+                    throw new KeyNotFoundException(Key.ToString());
+                Order.Add(Key);
             }
         }
 

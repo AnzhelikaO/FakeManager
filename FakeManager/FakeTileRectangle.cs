@@ -21,10 +21,10 @@ namespace FakeManager
         //public bool IsPersonal => Collection.IsPersonal;
 
         #endregion
-        #region Constructor [TileProvider]
+        #region Constructor [ITileCollection]
 
         public FakeTileRectangle(FakeCollection Collection, int X, int Y,
-            int Width, int Height, ITileCollection Tile = null)
+            int Width, int Height, ITileCollection CopyFrom = null)
         {
             this.Collection = Collection;
             this.Tile = new FakeTileProvider(Width, Height);
@@ -36,11 +36,11 @@ namespace FakeManager
             this.Y = Y;
             this.Width = Width;
             this.Height = Height;
-            if (Tile != null)
+            if (CopyFrom != null)
                 for (int i = X; i < X + Width; i++)
                     for (int j = Y; j < Y + Height; j++)
                     {
-                        ITile t = Tile[i, j];
+                        ITile t = CopyFrom[i, j];
                         if (t != null)
                             this.Tile[i - X, j - Y].CopyFrom(t);
                     }
@@ -86,10 +86,9 @@ namespace FakeManager
                 FakeTileProvider newTile = new FakeTileProvider(Width, Height);
                 for (int i = 0; i < Width; i++)
                     for (int j = 0; j < Height; j++)
-                        if (i < this.Width && j < this.Height)
-                            newTile[i, j] = Tile[i, j];
-                        else
-                            newTile[i, j] = new Tile();
+                        newTile[i, j] = ((i < this.Width) && (j < this.Height))
+                                            ? Tile[i, j]
+                                            : new Tile();
                 Tile = newTile;
                 this.Width = Width;
                 this.Height = Height;
@@ -99,9 +98,7 @@ namespace FakeManager
         #endregion
         #region Update
 
-        /// <summary>
-        /// blet ne udalyat nahui
-        /// </summary>
+        // Do not remove.
         public void Update() { }
 
         #endregion
