@@ -11,7 +11,7 @@ namespace FakeManager
     {
         #region Data
 
-        protected internal FakeTileProvider Tile { get; set; }
+        public FakeTileProvider Tile { get; protected set; }
         public int X { get; protected set; }
         public int Y { get; protected set; }
         public int Width { get; protected set; }
