@@ -1,4 +1,5 @@
 # FakeManager
+![](Example.gif)
 
 ## About
 Plugin for creating zones with fake tiles and signs.

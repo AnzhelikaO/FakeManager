@@ -41,7 +41,7 @@ namespace FakeManager
             {
                 if (Data.ContainsKey(Key))
                     throw new ArgumentException($"Key '{Key}' is already in use.");
-                FakeTileRectangle fake = new FakeTileRectangle(this, X, Y, Width, Height, CopyFrom);
+                FakeTileRectangle fake = new FakeTileRectangle(this, Key, X, Y, Width, Height, CopyFrom);
                 Data.Add(Key, fake);
                 Order.Add(Key);
                 return fake;

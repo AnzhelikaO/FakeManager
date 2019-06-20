@@ -11,6 +11,7 @@ namespace FakeManager
     {
         #region Data
 
+        public object Key { get; }
         public FakeTileProvider Tile { get; protected set; }
         public int X { get; protected set; }
         public int Y { get; protected set; }
@@ -27,8 +28,9 @@ namespace FakeManager
         #region Constructor
 
         public FakeTileRectangle(FakeCollection Collection,
-            int X, int Y, int Width, int Height)
+            object Key, int X, int Y, int Width, int Height)
         {
+            this.Key = Key;
             this.Collection = Collection;
             this.Tile = new FakeTileProvider(Width, Height);
             for (int i = 0; i < Width; i++)
@@ -43,9 +45,9 @@ namespace FakeManager
 
         #region ITileCollection
 
-        public FakeTileRectangle(FakeCollection Collection, int X, int Y,
-                int Width, int Height, ITileCollection CopyFrom)
-            : this(Collection, X, Y, Width, Height)
+        public FakeTileRectangle(FakeCollection Collection, object Key,
+                int X, int Y, int Width, int Height, ITileCollection CopyFrom)
+            : this(Collection, Key, X, Y, Width, Height)
         {
             if (CopyFrom != null)
                 for (int i = X; i < X + Width; i++)
@@ -60,9 +62,9 @@ namespace FakeManager
         #endregion
         #region ITile[,]
 
-        public FakeTileRectangle(FakeCollection Collection,
+        public FakeTileRectangle(FakeCollection Collection, object Key,
             int X, int Y, int Width, int Height, ITile[,] Tile)
-            : this(Collection, X, Y, Width, Height)
+            : this(Collection, Key, X, Y, Width, Height)
         {
             if (Tile != null)
                 for (int i = X; i < X + Width; i++)
@@ -255,6 +257,6 @@ namespace FakeManager
         #endregion
 
         public object Clone() =>
-            new FakeTileRectangle(Collection, X, Y, Width, Height, Tile);
+            new FakeTileRectangle(Collection, Key, X, Y, Width, Height, Tile);
     }
 }
