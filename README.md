@@ -22,7 +22,17 @@ FakeTileRectangle Add(object Key, int X, int Y,
 
 And remove it:
 ```cs
-FakeManager.FakeManager.Common.Remove(object Key);
+bool Remove(object Key);
+```
+
+Clear all fake zones:
+```cs
+void Clear();
+```
+
+Place fake zone on top of all others:
+```cs
+void SetTop(object Key);
 ```
 
 ## FakeTileRectangle
