@@ -2,6 +2,7 @@
 using OTAPI.Tile;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Terraria;
 using TerrariaApi.Server;
@@ -17,7 +18,6 @@ namespace FakeManager
         public override Version Version => Assembly.GetExecutingAssembly().GetName().Version;
         public override string Author => "Anzhelika & ASgo";
         public override string Description => "Plugin for creating zones with fake tiles and signs.";
-        public FakeManager(Main game) : base(game) { }
 
         public static FakeCollection Common { get; } = new FakeCollection();
         //public static FakeCollection[] Personal = new FakeCollection[Main.maxPlayers];
@@ -25,6 +25,15 @@ namespace FakeManager
 
         #endregion
 
+        #region Constructor
+
+        public FakeManager(Main game)
+            : base(game)
+        {
+            Order = -1001;
+        }
+
+        #endregion
         #region Initialize
 
         public override void Initialize()
@@ -69,13 +78,21 @@ namespace FakeManager
             {
                 case PacketTypes.TileSendSection:
                     args.Handled = true;
-                    SendSectionPacket.Send(args.remoteClient, args.ignoreClient,
-                        args.number, (int)args.number2, (short)args.number3, (short)args.number4);
+                    if (args.text?._text == null)
+                        SendSectionPacket.Send(args.remoteClient, args.ignoreClient,
+                            args.number, (int)args.number2, (short)args.number3, (short)args.number4);
+                    else
+                        SendSectionPacket.Send(args.text._text.Select(c => (int)c), args.ignoreClient,
+                            args.number, (int)args.number2, (short)args.number3, (short)args.number4);
                     break;
                 case PacketTypes.TileSendSquare:
                     args.Handled = true;
-                    SendTileSquarePacket.Send(args.remoteClient, args.ignoreClient,
-                        args.number, (int)args.number2, (int)args.number3, args.number5);
+                    if (args.text?._text == null)
+                        SendTileSquarePacket.Send(args.remoteClient, args.ignoreClient,
+                            args.number, (int)args.number2, (int)args.number3, args.number5);
+                    else
+                        SendTileSquarePacket.Send(args.text._text.Select(c => (int)c), args.ignoreClient,
+                            args.number, (int)args.number2, (int)args.number3, args.number5);
                     break;
             }
         }
