@@ -20,6 +20,7 @@ namespace FakeManager
         public bool Enabled { get; set; } = true;
         public FakeCollection Collection { get; }
         protected Dictionary<int, Sign> FakeSigns = new Dictionary<int, Sign>();
+        protected List<Chest> FakeChests = new List<Chest>();
         private Sign SignPlaceholder = new Sign() { x = -1, y = -1 };
 
         //public bool IsPersonal => Collection.IsPersonal;
@@ -180,6 +181,47 @@ namespace FakeManager
         }
 
         #endregion
+        #region AddChest
+
+        public void AddChest(Chest Chest, bool Replace = true)
+        {
+            if (Chest == null)
+                throw new ArgumentNullException(nameof(Chest), "Chest is null.");
+
+            lock (FakeChests)
+            {
+                int x = Chest.x, y = Chest.y;
+                int index = FakeChests.FindIndex(c => ((c.x == x) && (c.y == y)));
+                if ((index == -1) || !Replace)
+                    FakeChests.Add(Chest);
+                else
+                    FakeChests[index] = Chest;
+            }
+        }
+
+        #endregion
+        #region RemoveChest
+
+        public bool RemoveChest(Chest Chest)
+        {
+            if (Chest == null)
+                throw new ArgumentNullException(nameof(Chest), "Chest is null.");
+            return RemoveChest(Chest.x, Chest.y);
+        }
+
+        public bool RemoveChest(int X, int Y)
+        {
+            lock (FakeChests)
+            {
+                int index = FakeChests.FindIndex(c => ((c.x == X) && (c.y == Y)));
+                if (index == -1)
+                    return false;
+                FakeChests.RemoveAt(index);
+                return true;
+            }
+        }
+
+        #endregion
 
         #region Intersect
 
@@ -252,6 +294,20 @@ namespace FakeManager
                     if ((x >= x1) && (x < x2) && (y >= y1) && (y < y2))
                         Signs.Add(pair.Key, pair.Value);
                 }
+        }
+
+        #endregion
+        #region ApplyChest
+
+        protected internal void ApplyChest(ref Chest Chest, int AbsoluteX, int AbsoluteY)
+        {
+            lock (FakeChests)
+                foreach (Chest chest in FakeChests)
+                    if ((chest.x == AbsoluteX) && (chest.y == AbsoluteY))
+                    {
+                        Chest = chest;
+                        return;
+                    }
         }
 
         #endregion

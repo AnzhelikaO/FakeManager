@@ -126,9 +126,7 @@ namespace FakeManager
         private static void CompressTileBlock_Inner(BinaryWriter BinaryWriter,
             int X, int Y, int Width, int Height)
         {
-            short[] array = new short[1000];
             short[] array3 = new short[1000];
-            short num = 0;
             short num3 = 0;
             short num4 = 0;
             int num5 = 0;
@@ -137,8 +135,7 @@ namespace FakeManager
             byte[] array4 = new byte[13];
             OTAPI.Tile.ITile tile = null;
 
-            OTAPI.Tile.ITile[,] tiles =
-                FakeManager.GetAppliedTiles(X, Y, Width, Height);
+            OTAPI.Tile.ITile[,] tiles = FakeManager.GetAppliedTiles(X, Y, Width, Height);
             for (int i = Y; i < Y + Height; i++)
             {
                 for (int j = X; j < X + Width; j++)
@@ -184,24 +181,6 @@ namespace FakeManager
                                 array4[num5] = (byte)(tile2.type >> 8);
                                 num5++;
                                 b |= 32;
-                            }
-                            if (Terraria.ID.TileID.Sets.BasicChest[(int)tile2.type] && tile2.frameX % 36 == 0 && tile2.frameY % 36 == 0)
-                            {
-                                short num7 = (short)Chest.FindChest(j, i);
-                                if (num7 != -1)
-                                {
-                                    array[(int)num] = num7;
-                                    num += 1;
-                                }
-                            }
-                            if (tile2.type == 88 && tile2.frameX % 54 == 0 && tile2.frameY % 36 == 0)
-                            {
-                                short num8 = (short)Chest.FindChest(j, i);
-                                if (num8 != -1)
-                                {
-                                    array[(int)num] = num8;
-                                    num += 1;
-                                }
                             }
                             if (tile2.type == 378 && tile2.frameX % 36 == 0 && tile2.frameY == 0)
                             {
@@ -344,16 +323,8 @@ namespace FakeManager
             }
             array4[num6] = b;
             BinaryWriter.Write(array4, num6, num5 - num6);
-            BinaryWriter.Write(num);
-            for (int k = 0; k < (int)num; k++)
-            {
-                Chest chest = Main.chest[(int)array[k]];
-                BinaryWriter.Write(array[k]);
-                BinaryWriter.Write((short)chest.x);
-                BinaryWriter.Write((short)chest.y);
-                BinaryWriter.Write(chest.name);
-            }
 
+            BinaryWriter.Write(0); // Chests
             Dictionary<int, Sign> signs = FakeManager.GetAppliedSigns(X, Y, Width, Height);
             BinaryWriter.Write((short)signs.Count);
             foreach (KeyValuePair<int, Sign> pair in signs)

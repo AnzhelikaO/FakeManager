@@ -10,11 +10,11 @@ namespace FakeManager
     {
         #region Data
 
-        protected internal Dictionary<object, FakeTileRectangle> Data =
+        protected internal Dictionary<object, FakeTileRectangle> Data { get; } =
             new Dictionary<object, FakeTileRectangle>();
         // The more is index in Order, the higher in hierarchy fake is.
-        protected internal List<object> Order = new List<object>();
-        private object Locker = new object();
+        protected internal List<object> Order { get; } = new List<object>();
+        private object Locker { get; } = new object();
 
         #endregion
         #region Constructor
@@ -41,7 +41,8 @@ namespace FakeManager
             {
                 if (Data.ContainsKey(Key))
                     throw new ArgumentException($"Key '{Key}' is already in use.");
-                FakeTileRectangle fake = new FakeTileRectangle(this, Key, X, Y, Width, Height, CopyFrom);
+                FakeTileRectangle fake = new FakeTileRectangle(this,
+                    Key, X, Y, Width, Height, CopyFrom);
                 Data.Add(Key, fake);
                 Order.Add(Key);
                 return fake;

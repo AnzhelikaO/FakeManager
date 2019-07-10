@@ -23,8 +23,9 @@ namespace FakeManager
 
         #region Data
 
-        internal readonly int X, Y;
-        private StructTile[,] Data;
+        public int X { get; }
+        public int Y { get; }
+        private StructTile[,] Data { get; }
 
         #endregion
         #region Constructor

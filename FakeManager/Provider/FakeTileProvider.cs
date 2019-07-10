@@ -6,17 +6,20 @@ namespace FakeManager
 {
     public class FakeTileProvider : ITileCollection, IDisposable
     {
-        private StructTile[,] Data;
+        #region Data
+
+        private StructTile[,] Data { get; set; }
         public int Width { get; }
         public int Height { get; }
 
+        #endregion
         #region Constructor
 
         public FakeTileProvider(int Width, int Height)
         {
+            this.Data = new StructTile[Width, Height];
             this.Width = Width;
             this.Height = Height;
-            Data = new StructTile[Width, Height];
         }
         
         #endregion
@@ -25,8 +28,8 @@ namespace FakeManager
 
         public ITile this[int X, int Y]
         {
-            get =>  new TileReference(Data, X, Y);
-            set => (new TileReference(Data, X, Y)).CopyFrom(value);
+            get => new TileReference(Data, X, Y);
+            set => new TileReference(Data, X, Y).CopyFrom(value);
         }
 
         #endregion

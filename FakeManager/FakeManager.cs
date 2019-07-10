@@ -27,11 +27,8 @@ namespace FakeManager
 
         #region Constructor
 
-        public FakeManager(Main game)
-            : base(game)
-        {
+        public FakeManager(Main game) : base(game) =>
             Order = -1001;
-        }
 
         #endregion
         #region Initialize
@@ -42,6 +39,7 @@ namespace FakeManager
             for (int i = 0; i < Main.maxPlayers; i++)
                 AllPlayers[i] = i;
 
+            ServerApi.Hooks.NetGetData.Register(this, OnGetData, 1000000);
             ServerApi.Hooks.NetSendData.Register(this, OnSendData, 1000000);
             /*
             ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
@@ -56,6 +54,7 @@ namespace FakeManager
         {
             if (disposing)
             {
+                ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
                 ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
                 /*
                 ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
@@ -67,6 +66,20 @@ namespace FakeManager
 
         #endregion
 
+        #region OnGetData
+
+        private void OnGetData(GetDataEventArgs args)
+        {
+            if (args.Handled || args.MsgID != PacketTypes.ChestGetContents)
+                return;
+            int x = args.Msg.readBuffer[args.Index] + args.Msg.readBuffer[args.Index + 1] * 256;
+            int y = args.Msg.readBuffer[args.Index + 2] + args.Msg.readBuffer[args.Index + 3] * 256;
+            Chest chest = GetAppliedChest(x, y);
+            if (chest != null)
+                SendChestItemPacket.SendMany(args.Msg.whoAmI, 999, chest.item);
+        }
+
+        #endregion
         #region OnSendData
 
         private void OnSendData(SendDataEventArgs args)
@@ -171,6 +184,39 @@ namespace FakeManager
             }
             */
             return signs;
+        }
+
+        #endregion
+        #region GetAppliedChest
+
+        public static Chest GetAppliedChest(int X, int Y)
+        {
+            Chest chest = null;
+            for (int i = 0; i < Main.chest.Length; i++)
+            {
+                Chest ch = Main.chest[i];
+                if ((ch != null) && (ch.x == X) && (ch.x == Y))
+                {
+                    chest = ch;
+                    break;
+                }
+            }
+
+            for (int i = 0; i < Common.Order.Count; i++)
+            {
+                FakeTileRectangle fake = Common.Data[Common.Order[i]];
+                if (fake.Enabled && fake.IsIntersecting(X, Y, 1, 1))
+                    fake.ApplyChest(ref chest, X, Y);
+            }
+            /*
+            for (int i = 0; i < Personal[PlayerIndex].Order.Count; i++)
+            {
+                FakeTileRectangle fake = Personal[PlayerIndex].Data[Personal[PlayerIndex].Order[i]];
+                if (fake.Enabled && fake.IsIntersecting(X, Y, Width, Height))
+                    fake.ApplyChests(chests, X, Y, Width, Height);
+            }
+            */
+            return chest;
         }
 
         #endregion
