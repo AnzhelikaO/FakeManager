@@ -324,7 +324,7 @@ namespace FakeManager
             array4[num6] = b;
             BinaryWriter.Write(array4, num6, num5 - num6);
 
-            BinaryWriter.Write(0); // Chests
+            BinaryWriter.Write((short)0); // Chests
             Dictionary<int, Sign> signs = FakeManager.GetAppliedSigns(X, Y, Width, Height);
             BinaryWriter.Write((short)signs.Count);
             foreach (KeyValuePair<int, Sign> pair in signs)

@@ -76,7 +76,10 @@ namespace FakeManager
             int y = args.Msg.readBuffer[args.Index + 2] + args.Msg.readBuffer[args.Index + 3] * 256;
             Chest chest = GetAppliedChest(x, y);
             if (chest != null)
+            {
                 SendChestItemPacket.SendMany(args.Msg.whoAmI, 999, chest.item);
+                SendChestOpenPacket.Send(args.Msg.whoAmI, 999, x, y);
+            }
         }
 
         #endregion
