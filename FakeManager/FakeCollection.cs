@@ -63,15 +63,15 @@ namespace FakeManager
                 Order.Remove(Key);
                 int x = o.X, y = o.Y;
                 int w = (o.X + o.Width - 1), h = (o.Y + o.Height - 1);
-                int sx1 = Netplay.GetSectionX(x), sy1 = Netplay.GetSectionY(y);
-                int sx2 = Netplay.GetSectionX(w), sy2 = Netplay.GetSectionY(h);
+                int sx = Netplay.GetSectionX(x), sy = Netplay.GetSectionY(y);
+                int ex = Netplay.GetSectionX(x + w - 1), ey = Netplay.GetSectionY(y + h - 1);
                 o.Tile.Dispose();
                 if (Cleanup)
                     GC.Collect();
                 NetMessage.SendData((int)PacketTypes.TileSendSection,
                     -1, -1, null, x, y, w, h);
                 NetMessage.SendData((int)PacketTypes.TileFrameSection,
-                    -1, -1, null, sx1, sy1, sx2, sy2);
+                    -1, -1, null, sx, sy, ex, ey);
                 return true;
             }
         }
