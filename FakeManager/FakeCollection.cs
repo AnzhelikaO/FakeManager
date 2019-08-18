@@ -62,7 +62,7 @@ namespace FakeManager
                 Data.Remove(Key);
                 Order.Remove(Key);
                 int x = o.X, y = o.Y;
-                int w = (o.X + o.Width - 1), h = (o.Y + o.Height - 1);
+                int w = o.Width, h = o.Height;
                 int sx = Netplay.GetSectionX(x), sy = Netplay.GetSectionY(y);
                 int ex = Netplay.GetSectionX(x + w - 1), ey = Netplay.GetSectionY(y + h - 1);
                 o.Tile.Dispose();
