@@ -48,7 +48,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SendChestOpenPacket.cs" />
     <Compile Include="SendTileSquarePacket.cs" />
     <Compile Include="SendSectionPacket.cs" />
     <Compile Include="FakeCollection.cs" />
