@@ -30,7 +30,7 @@ namespace FakeManager
                 if ((i < 0) || (i >= Main.maxPlayers))
                     throw new ArgumentOutOfRangeException(nameof(Who));
                 RemoteClient client = Netplay.Clients[i];
-                if (client?.IsActive == true)
+                if (client?.IsConnected() == true)
                     clients.Add(client);
             }
             if (clients.Count == 0)
@@ -53,11 +53,15 @@ namespace FakeManager
             foreach (RemoteClient client in clients)
                 try
                 {
+                    if (FakeManager.NetSendBytes(client, data, 0, data.Length))
+                        continue;
+
                     client.Socket.AsyncSend(data, 0, data.Length,
                         new SocketSendCallback(client.ServerWriteCallBack), null);
                 }
                 catch (IOException) { }
                 catch (ObjectDisposedException) { }
+                catch (InvalidOperationException) { }
         }
 
         #endregion

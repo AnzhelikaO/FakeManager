@@ -22,6 +22,7 @@ namespace FakeManager
         public static FakeCollection Common { get; } = new FakeCollection();
         //public static FakeCollection[] Personal = new FakeCollection[Main.maxPlayers];
         internal static int[] AllPlayers;
+        internal static Func<RemoteClient, byte[], int, int, bool> NetSendBytes;
 
         #endregion
 
@@ -38,15 +39,16 @@ namespace FakeManager
 
         public override void Initialize()
         {
+            NetSendBytes = (Func<RemoteClient, byte[], int, int, bool>)Delegate.CreateDelegate(
+                typeof(Func<RemoteClient, byte[], int, int, bool>),
+                ServerApi.Hooks,
+                ServerApi.Hooks.GetType().GetMethod("InvokeNetSendBytes", BindingFlags.NonPublic | BindingFlags.Instance));
+
             AllPlayers = new int[Main.maxPlayers];
             for (int i = 0; i < Main.maxPlayers; i++)
                 AllPlayers[i] = i;
 
             ServerApi.Hooks.NetSendData.Register(this, OnSendData, 1000000);
-            /*
-            ServerApi.Hooks.ServerJoin.Register(this, OnServerJoin);
-            ServerApi.Hooks.ServerLeave.Register(this, OnServerLeave);
-            */
         }
 
         #endregion
@@ -57,10 +59,6 @@ namespace FakeManager
             if (disposing)
             {
                 ServerApi.Hooks.NetSendData.Deregister(this, OnSendData);
-                /*
-                ServerApi.Hooks.ServerJoin.Deregister(this, OnServerJoin);
-                ServerApi.Hooks.ServerLeave.Deregister(this, OnServerLeave);
-                */
             }
             base.Dispose(disposing);
         }
@@ -78,40 +76,25 @@ namespace FakeManager
             {
                 case PacketTypes.TileSendSection:
                     args.Handled = true;
-                    if (args.text?._text == null)
-                        SendSectionPacket.Send(args.remoteClient, args.ignoreClient,
+                    if (args.text?._text?.Length > 0)
+                        SendSectionPacket.Send(args.text._text.Select(c => (int)c), args.ignoreClient,
                             args.number, (int)args.number2, (short)args.number3, (short)args.number4);
                     else
-                        SendSectionPacket.Send(args.text._text.Select(c => (int)c), args.ignoreClient,
+                        SendSectionPacket.Send(args.remoteClient, args.ignoreClient,
                             args.number, (int)args.number2, (short)args.number3, (short)args.number4);
                     break;
                 case PacketTypes.TileSendSquare:
                     args.Handled = true;
-                    if (args.text?._text == null)
-                        SendTileSquarePacket.Send(args.remoteClient, args.ignoreClient,
+                    if (args.text?._text?.Length > 0)
+                        SendTileSquarePacket.Send(args.text._text.Select(c => (int)c), args.ignoreClient,
                             args.number, (int)args.number2, (int)args.number3, args.number5);
                     else
-                        SendTileSquarePacket.Send(args.text._text.Select(c => (int)c), args.ignoreClient,
+                        SendTileSquarePacket.Send(args.remoteClient, args.ignoreClient,
                             args.number, (int)args.number2, (int)args.number3, args.number5);
                     break;
             }
         }
 
-        #endregion
-        #region OnServerJoin, OnServerLeave
-        /*
-        private void OnServerJoin(JoinEventArgs args) =>
-            Personal[args.Who] = new FakeCollection(true);
-
-        private void OnServerLeave(LeaveEventArgs args)
-        {
-            FakeCollection collection = Personal[args.Who];
-            if (collection == null)
-                return;
-            collection.Clear();
-            Personal[args.Who] = null;
-        }
-        */
         #endregion
 
         #region GetAppliedTiles
