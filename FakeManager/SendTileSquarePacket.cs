@@ -12,12 +12,12 @@ namespace FakeManager
         #region Send
 
         public static void Send(int Who, int IgnoreIndex,
-                int Size, int X, int Y, int Number5 = 0) =>
+                int Size, int X, int Y, int TileChangeType = 0) =>
             Send(((Who == -1) ? FakeManager.AllPlayers : new int[] { Who }),
-                IgnoreIndex, Size, X, Y, Number5);
+                IgnoreIndex, Size, X, Y, TileChangeType);
 
         public static void Send(IEnumerable<int> Who, int IgnoreIndex,
-            int Size, int X, int Y, int Number5 = 0)
+            int Size, int X, int Y, int TileChangeType = 0)
         {
             if (Who == null)
                 return;
@@ -30,7 +30,7 @@ namespace FakeManager
                 if ((i < 0) || (i >= Main.maxPlayers))
                     throw new ArgumentOutOfRangeException(nameof(Who));
                 RemoteClient client = Netplay.Clients[i];
-                if (client?.IsConnected() == true)
+                if (NetMessage.buffer[i].broadcast && client.IsConnected() && client.SectionRange(Size, X, Y))
                     clients.Add(client);
             }
             if (clients.Count == 0)
@@ -42,7 +42,7 @@ namespace FakeManager
             {
                 bw.BaseStream.Position = 2L;
                 bw.Write((byte)PacketTypes.TileSendSquare);
-                WriteTiles(bw, Size, X, Y, Number5);
+                WriteTiles(bw, Size, X, Y, TileChangeType);
                 long position = bw.BaseStream.Position;
                 bw.BaseStream.Position = 0L;
                 bw.Write((short)position);
@@ -68,7 +68,7 @@ namespace FakeManager
         #region WriteTiles
 
         private static void WriteTiles(BinaryWriter BinaryWriter,
-            int Size, int X, int Y, int Number5 = 0)
+            int Size, int X, int Y, int TileChangeType = 0)
         {
             if (Size < 0)
             {
@@ -90,14 +90,14 @@ namespace FakeManager
             {
                 Y = Main.maxTilesY - Size - 1;
             }
-            if (Number5 == 0)
+            if (TileChangeType == 0)
             {
                 BinaryWriter.Write((ushort)(Size & 32767));
             }
             else
             {
                 BinaryWriter.Write((ushort)((Size & 32767) | 32768));
-                BinaryWriter.Write((byte)Number5);
+                BinaryWriter.Write((byte)TileChangeType);
             }
             BinaryWriter.Write((short)X);
             BinaryWriter.Write((short)Y);
