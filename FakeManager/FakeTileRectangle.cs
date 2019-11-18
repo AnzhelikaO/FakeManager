@@ -123,6 +123,24 @@ namespace FakeManager
         public void Update() { }
 
         #endregion
+        #region SetEnabled
+
+        // Do not remove
+        public void SetEnabled(bool value)
+        {
+            if (Enabled != value)
+            {
+                Enabled = value;
+                int sx = Netplay.GetSectionX(X), sy = Netplay.GetSectionY(Y);
+                int ex = Netplay.GetSectionX(X + Width - 1), ey = Netplay.GetSectionY(Y + Height - 1);
+                NetMessage.SendData((int)PacketTypes.TileSendSection,
+                    -1, -1, null, X, Y, Width, Height);
+                NetMessage.SendData((int)PacketTypes.TileFrameSection,
+                    -1, -1, null, sx, sy, ex, ey);
+            }
+        }
+
+        #endregion
 
         #region AddSign
 
